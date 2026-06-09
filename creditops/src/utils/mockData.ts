@@ -166,12 +166,16 @@ export const funnelData = [
 
 function genDailyData() {
   const out = [];
-  const base = new Date(2025, 0, 1);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = now.getDate();
   const lk = [90,85,92,88,95,80,86,94,91,87,93,90,88,95,82,91,88,94,90,86,93,87,91,88,95,90,83,92,89,96];
   const pr = [22,18,25,20,28,19,23,27,24,20,26,23,21,28,17,25,22,27,24,20,26,21,25,22,29,24,18,26,23,30];
   const dp = [14,11,16,12,18,10,14,17,15,12,16,14,13,18,10,16,13,17,15,11,16,13,16,14,18,15,10,17,14,19];
-  for (let i = 0; i < 30; i++) {
-    const d = new Date(base); d.setDate(base.getDate() + i);
+  for (let i = 0; i < today; i++) {
+    const d = new Date(year, month, i + 1);
     out.push({ dia:`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}`, localizados:lk[i]??90, promessas:pr[i]??22, depositos:dp[i]??14 });
   }
   return out;

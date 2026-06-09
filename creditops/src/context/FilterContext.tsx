@@ -12,7 +12,7 @@ interface FilterContextValue {
 }
 
 const defaultFilters: Filters = {
-  dataInicial: '2025-01-01', dataFinal: new Date().toISOString().slice(0, 10),
+  dataInicial: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10), dataFinal: new Date().toISOString().slice(0, 10),
   carteira: 'all', segmento: 'all', operador: 'all', fornecedor: 'all', produto: 'all',
 };
 
