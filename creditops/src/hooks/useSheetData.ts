@@ -1,37 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchSheet, parseCSV, cleanNumber, cleanPct, SHEET_URLS } from '../utils/sheetsData';
+import { fetchSheet, SHEET_URLS } from '../utils/sheetsData';
 import type { OpTable, OpRow, RowType } from '../utils/mockData';
 
-// ─── Tipos ───────────────────────────────────────────────────────────────────
-
 export interface SheetKPIs {
-  carteiraTotalClientes: number;
-  carteiraTotalValor: number;
-  clientesLocalizados: number;
-  clientesLocalizadosPct: number;
-  promessasVigentes: number;
-  promessasVigentesPct: number;
-  depositosCompletos: number;
-  depositosCompletosPct: number;
-  valorRecuperado: number;
-}
-
-export interface SheetData {
-  kpis: SheetKPIs;
-  primaryLocalizados: OpTable[];
-  primaryPromessas: OpTable[];
-  primaryDepositos: OpTable[];
-  secondaryLocalizados: OpTable[];
-  secondaryPromessas: OpTable[];
-  secondaryDepositos: OpTable[];
-  executivoRows: ExecRow[];
-  equipe1Total: ExecTotal;
-  equipe2Total: ExecTotal;
-  grandTotal: ExecTotal;
-  baixasPrimClientes: BaixasRow[];
-  baixasPrimDivida: BaixasRow[];
-  baixasSecClientes: BaixasRow[];
-  baixasSecDivida: BaixasRow[];
+  carteiraTotalClientes: number; carteiraTotalValor: number;
+  clientesLocalizados: number; clientesLocalizadosPct: number;
+  promessasVigentes: number; depositosCompletos: number;
+  depositosCompletosPct: number; valorRecuperado: number;
 }
 
 export interface ExecRow {
@@ -55,278 +30,266 @@ export interface BaixasRow {
   pctBaixas: number; pctRetido: number; rep?: number; isTotal?: boolean;
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function findRowIndex(rows: string[][], label: string): number {
-  return rows.findIndex(r => r[0]?.trim().toLowerCase() === label.toLowerCase());
+export interface SheetData {
+  kpis: SheetKPIs;
+  primaryLocalizados: OpTable[]; primaryPromessas: OpTable[]; primaryDepositos: OpTable[];
+  secondaryLocalizados: OpTable[]; secondaryPromessas: OpTable[]; secondaryDepositos: OpTable[];
+  executivoRows: ExecRow[]; equipe1Total: ExecTotal; equipe2Total: ExecTotal; grandTotal: ExecTotal;
+  baixasPrimClientes: BaixasRow[]; baixasPrimDivida: BaixasRow[];
+  baixasSecClientes: BaixasRow[]; baixasSecDivida: BaixasRow[];
 }
 
-function makeOpTable(title: string, columns: string[], rows: OpRow[]): OpTable {
-  return { title, columns, rows };
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function cleanNum(v: string): number {
+  if (!v) return 0;
+  const s = v.replace(/R\$\s*/g,'').replace(/\$\s*/g,'').replace(/\./g,'').replace(',','.').replace('%','').trim();
+  return parseFloat(s) || 0;
 }
 
 function rowType(label: string): RowType {
-  const l = label.toLowerCase();
-  if (l.endsWith('%')) return 'pct';
+  const l = label.toLowerCase().trim();
+  if (l.endsWith('%') || l.includes(' %')) return 'pct';
   if (l === 'total') return 'total';
-  if (l === 'total %' || l === 'total%') return 'total-pct';
   return 'data';
 }
 
-// ─── Parser Resumo Depósitos ─────────────────────────────────────────────────
+function isEmpty(r: string[]): boolean {
+  return r.every(c => !c || !c.trim());
+}
 
-function parseDepositosSheet(rows: string[][]): Partial<SheetData> {
-  // Acha seções por marcadores
-  let primStart = -1, secStart = -1;
-  for (let i = 0; i < rows.length; i++) {
-    const first = rows[i]?.[0]?.trim() ?? '';
-    if (first === 'Carteira Primária' && primStart === -1) primStart = i;
-    if (first === 'Carteira Secundária') secStart = i;
+// Encontra o índice da primeira linha cujo col0 === label (case-insensitive)
+function findRow(rows: string[][], label: string, from = 0): number {
+  const l = label.toLowerCase();
+  for (let i = from; i < rows.length; i++) {
+    if ((rows[i]?.[0] ?? '').trim().toLowerCase() === l) return i;
   }
+  return -1;
+}
 
-  const primRows = primStart >= 0 ? rows.slice(primStart, secStart >= 0 ? secStart : undefined) : rows;
-  const secRows  = secStart  >= 0 ? rows.slice(secStart) : [];
-
-  function extractSection(sectionRows: string[][], startLabel: string, endLabels: string[]): string[][] {
-    const start = sectionRows.findIndex(r => r[0]?.trim() === startLabel);
-    if (start < 0) return [];
-    let end = sectionRows.length;
-    for (const el of endLabels) {
-      const idx = sectionRows.findIndex((r, i) => i > start && r[0]?.trim() === el);
-      if (idx > 0 && idx < end) end = idx;
-    }
-    return sectionRows.slice(start, end);
+// Extrai um bloco entre dois marcadores de label
+function sliceBetween(rows: string[][], startLabel: string, endLabels: string[], from = 0): string[][] {
+  const start = findRow(rows, startLabel, from);
+  if (start < 0) return [];
+  let end = rows.length;
+  for (const el of endLabels) {
+    const idx = findRow(rows, el, start + 1);
+    if (idx > 0 && idx < end) end = idx;
   }
+  return rows.slice(start, end);
+}
 
-  function buildLocalizadosTable(srows: string[][], cols: string[]): OpTable[] {
-    const locRows = extractSection(srows, 'Localizados', ['Promessas', 'Depósito', 'Carteira Secundária']);
-    const clienteRows: OpRow[] = [];
-    const dividaRows: OpRow[] = [];
-    let inDivida = false;
-    for (const r of locRows) {
-      const label = r[0]?.trim() ?? '';
-      if (!label || label === 'Localizados') continue;
-      if (label === 'Dívida') { inDivida = true; continue; }
-      if (label === 'Clientes') { inDivida = false; continue; }
-      const values = r.slice(1, cols.length + 1).map(v => v || '0');
-      const row: OpRow = { label, values, type: rowType(label) };
-      if (inDivida) dividaRows.push(row); else clienteRows.push(row);
-    }
-    return [
-      makeOpTable('Clientes', cols, clienteRows),
-      makeOpTable('Dívida',   cols, dividaRows),
-    ];
+// Constrói OpTable a partir de linhas brutas (ignora linhas vazias e cabeçalhos de seção)
+function buildTable(title: string, cols: string[], rawRows: string[][], skipLabels: string[]): OpTable {
+  const skip = new Set(skipLabels.map(s => s.toLowerCase()));
+  const opRows: OpRow[] = [];
+  for (const r of rawRows) {
+    const label = (r[0] ?? '').trim();
+    if (!label || isEmpty(r) || skip.has(label.toLowerCase())) continue;
+    const values = r.slice(1, cols.length + 1).map(v => v?.trim() || '0');
+    opRows.push({ label, values, type: rowType(label) });
   }
+  return { title, columns: cols, rows: opRows };
+}
 
-  function buildPromessasTable(srows: string[][], cols: string[]): OpTable[] {
-    const promRows = extractSection(srows, 'Promessas', ['Depósito', 'Carteira Secundária']);
-    const clienteRows: OpRow[] = [];
-    const dividaRows: OpRow[] = [];
-    let inDivida = false;
-    for (const r of promRows) {
-      const label = r[0]?.trim() ?? '';
-      if (!label || label === 'Promessas') continue;
-      if (label === 'Dívida') { inDivida = true; continue; }
-      if (label === 'Clientes') { inDivida = false; continue; }
-      const values = r.slice(1, cols.length + 1).map(v => v || '0');
-      const row: OpRow = { label, values, type: rowType(label) };
-      if (inDivida) dividaRows.push(row); else clienteRows.push(row);
-    }
-    return [
-      makeOpTable('Clientes', cols, clienteRows),
-      makeOpTable('Dívida',   cols, dividaRows),
-    ];
-  }
+// ── Parser Resumo Depósitos ───────────────────────────────────────────────────
 
-  function buildDepositosTable(srows: string[][], cols: string[]): OpTable[] {
-    const depRows = extractSection(srows, 'Depósito', ['Carteira Secundária', 'Resumo Executivo']);
-    const clienteRows: OpRow[] = [];
-    const dividaRows: OpRow[] = [];
-    let inDivida = false;
-    for (const r of depRows) {
-      const label = r[0]?.trim() ?? '';
-      if (!label || label === 'Depósito') continue;
-      if (label === 'Dívida') { inDivida = true; continue; }
-      if (label === 'Cliente' || label === 'Clientes') { inDivida = false; continue; }
-      const values = r.slice(1, cols.length + 1).map(v => v || '0');
-      const row: OpRow = { label, values, type: rowType(label) };
-      if (inDivida) dividaRows.push(row); else clienteRows.push(row);
-    }
-    return [
-      makeOpTable('Clientes', cols, clienteRows),
-      makeOpTable('Dívida',   cols, dividaRows),
-    ];
-  }
+function parseDepositos(rows: string[][]): Partial<SheetData> {
+  // Encontra separação Primária / Secundária
+  const secIdx = findRow(rows, 'Carteira Secundária');
+  const primRows = rows.slice(0, secIdx > 0 ? secIdx : rows.length);
+  const secRows  = secIdx > 0 ? rows.slice(secIdx) : [];
 
-  // Colunas primária e secundária
   const PRIMARY_COLS   = ['Total','Novatos','2dos','Sin segundos','3ros','4tos','5tos','Regular','2xC','Estruturado','Atenção','Rec >35<60','Rec >60<90','Rec >90','Crédito'];
   const SECONDARY_COLS = ['Total','Novatos','2dos','Sin segundos','3ros','4tos','5tos','Regular 1','Regular 2','Regular 3','2xC','Estruturado','Atenção','Pronto socorro','UTI','Crédito'];
 
-  // KPIs da carteira primária
-  const assignadoRow = primRows.find(r => r[0]?.trim() === 'Clientes');
-  const depositoRow  = primRows.find(r => r[0]?.trim() === 'Completo');
-  const depositoPct  = primRows.find(r => r[0]?.trim() === 'Completo %');
-  const locRow       = primRows.find(r => r[0]?.trim() === 'Total' && r[1] && cleanNumber(r[1]) > 100 && cleanNumber(r[1]) < 5000);
-  const dividaRow    = primRows.find(r => r[0]?.trim() === 'Dívida');
+  function parseSec(srows: string[][], cols: string[]) {
+    const SKIP = ['Clientes','Dívida','Cliente','Localizados','Promessas','Depósito','Carteira','Assignado','Carteira Primária','Carteira Secundária'];
 
-  const totalClientes    = cleanNumber(assignadoRow?.[1] ?? '0');
-  const totalDivida      = cleanNumber(dividaRow?.[1] ?? '0');
-  const depositoCompleto = cleanNumber(depositoRow?.[1] ?? '0');
-  const depositoPctVal   = cleanNumber(depositoPct?.[1] ?? '0');
-  const localizados      = cleanNumber(locRow?.[1] ?? '0');
+    const locClientes = sliceBetween(srows, 'Localizados', ['Promessas','Depósito','Carteira Secundária']);
+    const locDivida   = locClientes.filter(r => (r[0]??'').trim().toLowerCase() === 'dívida' ||
+      locClientes.indexOf(r) > locClientes.findIndex(x => (x[0]??'').trim().toLowerCase() === 'dívida') && (x => x > 0)(locClientes.findIndex(x => (x[0]??'').trim().toLowerCase() === 'dívida')));
+
+    // Simpler approach: find sections by header within slice
+    function extractSubTable(sectionRows: string[][], headerLabel: string, stopLabels: string[]): string[][] {
+      const hi = findRow(sectionRows, headerLabel);
+      if (hi < 0) return [];
+      let end = sectionRows.length;
+      for (const sl of stopLabels) {
+        const si = findRow(sectionRows, sl, hi + 1);
+        if (si > 0 && si < end) end = si;
+      }
+      return sectionRows.slice(hi + 1, end).filter(r => !isEmpty(r));
+    }
+
+    const locBlock   = sliceBetween(srows, 'Localizados', ['Promessas','Depósito','Carteira Secundária']);
+    const promBlock  = sliceBetween(srows, 'Promessas',   ['Depósito','Carteira Secundária']);
+    const depBlock   = sliceBetween(srows, 'Depósito',    ['Carteira Secundária','Carteira Primária']);
+
+    const locCli  = extractSubTable(locBlock,  'Clientes', ['Dívida']);
+    const locDiv  = extractSubTable(locBlock,  'Dívida',   []);
+    const promCli = extractSubTable(promBlock, 'Clientes', ['Dívida']);
+    const promDiv = extractSubTable(promBlock, 'Dívida',   []);
+    const depCli  = extractSubTable(depBlock,  'Cliente',  ['Dívida']).concat(extractSubTable(depBlock,'Clientes',['Dívida']));
+    const depDiv  = extractSubTable(depBlock,  'Dívida',   []);
+
+    return {
+      loc:  [buildTable('Clientes', cols, locCli,  SKIP), buildTable('Dívida', cols, locDiv,  SKIP)],
+      prom: [buildTable('Clientes', cols, promCli, SKIP), buildTable('Dívida', cols, promDiv, SKIP)],
+      dep:  [buildTable('Clientes', cols, depCli,  SKIP), buildTable('Dívida', cols, depDiv,  SKIP)],
+    };
+  }
+
+  const prim = parseSec(primRows, PRIMARY_COLS);
+  const sec  = parseSec(secRows,  SECONDARY_COLS);
+
+  // KPIs
+  const assignRow  = primRows.find(r => (r[0]??'').trim() === 'Clientes' && r[1] && cleanNum(r[1]) > 100);
+  const dividaRow  = primRows.find(r => (r[0]??'').trim() === 'Dívida'   && r[1] && cleanNum(r[1]) > 1000000);
+  const totalLoc   = primRows.find(r => (r[0]??'').trim() === 'Total'    && r[1] && cleanNum(r[1]) > 100 && cleanNum(r[1]) < 10000);
+  const completoC  = primRows.find(r => (r[0]??'').trim() === 'Completo' && r[1] && cleanNum(r[1]) > 0 && cleanNum(r[1]) < 10000);
+  const completoD  = primRows.find(r => (r[0]??'').trim() === 'Completo' && r[1] && cleanNum(r[1]) > 1000000);
+  const completoPct= primRows.find(r => (r[0]??'').trim() === 'Completo %');
+
+  const totalClientes   = cleanNum(assignRow?.[1]  ?? '0');
+  const totalDivida     = cleanNum(dividaRow?.[1]  ?? '0');
+  const localizados     = cleanNum(totalLoc?.[1]   ?? '0');
+  const depositos       = cleanNum(completoC?.[1]  ?? '0');
+  const valorRecuperado = cleanNum(completoD?.[1]  ?? '0');
+  const depPct          = cleanNum(completoPct?.[1]?? '0');
 
   const kpis: SheetKPIs = {
     carteiraTotalClientes: totalClientes,
-    carteiraTotalValor: totalDivida,
-    clientesLocalizados: localizados,
-    clientesLocalizadosPct: totalClientes > 0 ? Math.round((localizados / totalClientes) * 100) : 0,
-    promessasVigentes: 0,
-    promessasVigentesPct: 0,
-    depositosCompletos: depositoCompleto,
-    depositosCompletosPct: depositoPctVal,
-    valorRecuperado: cleanNumber(primRows.find(r => r[0]?.trim() === 'Completo' && r[1] && cleanNumber(r[1]) > 100000)?.[1] ?? '0'),
+    carteiraTotalValor:    totalDivida,
+    clientesLocalizados:   localizados,
+    clientesLocalizadosPct: totalClientes > 0 ? Math.round((localizados/totalClientes)*100) : 0,
+    promessasVigentes:     0,
+    depositosCompletos:    depositos,
+    depositosCompletosPct: depPct,
+    valorRecuperado,
   };
 
   return {
     kpis,
-    primaryLocalizados:   buildLocalizadosTable(primRows, PRIMARY_COLS),
-    primaryPromessas:     buildPromessasTable(primRows, PRIMARY_COLS),
-    primaryDepositos:     buildDepositosTable(primRows, PRIMARY_COLS),
-    secondaryLocalizados: buildLocalizadosTable(secRows, SECONDARY_COLS),
-    secondaryPromessas:   buildPromessasTable(secRows, SECONDARY_COLS),
-    secondaryDepositos:   buildDepositosTable(secRows, SECONDARY_COLS),
+    primaryLocalizados:   prim.loc,
+    primaryPromessas:     prim.prom,
+    primaryDepositos:     prim.dep,
+    secondaryLocalizados: sec.loc,
+    secondaryPromessas:   sec.prom,
+    secondaryDepositos:   sec.dep,
   };
 }
 
-// ─── Parser Resumo Executivo ─────────────────────────────────────────────────
+// ── Parser Resumo Executivo ───────────────────────────────────────────────────
 
-function parseExecutivoSheet(rows: string[][]): Partial<SheetData> {
+function parseExecutivo(rows: string[][]): Partial<SheetData> {
   const execRows: ExecRow[] = [];
-  let currentEquipe: 'Antonio' | 'Ana' = 'Antonio';
-  let equipe1Rows: ExecRow[] = [];
-  let equipe2Rows: ExecRow[] = [];
+  let equipe: 'Antonio' | 'Ana' = 'Antonio';
+  let team1: ExecRow[] = [], team2: ExecRow[] = [];
   let foundTotal1 = false;
 
   for (const r of rows) {
-    const col0 = r[0]?.trim() ?? '';
-    const col1 = r[1]?.trim() ?? '';
-    const col2 = r[2]?.trim() ?? '';
+    const c0 = (r[0]??'').trim(), c1 = (r[1]??'').trim(), c2 = (r[2]??'').trim();
 
-    // Detecta linha de total de equipe em qualquer coluna
-    const isTotal = col0 === 'Total Equipe' ||
-                    col1 === 'Total Equipe' ||
-                    col2 === 'Total Equipe';
-    if (isTotal) {
-      if (!foundTotal1) { foundTotal1 = true; currentEquipe = 'Ana'; }
+    // Detecta linha "Total Equipe" em qualquer coluna
+    if (c0 === 'Total Equipe' || c1 === 'Total Equipe' || c2 === 'Total Equipe') {
+      if (!foundTotal1) { foundTotal1 = true; equipe = 'Ana'; }
       continue;
     }
 
-    // Ignora cabeçalhos e linhas sem email
-    const skipLabels = ['Executivo','Executivos / Carteiras','Antonio','Ana','Total'];
-    if (!col0 || skipLabels.includes(col0)) continue;
-    if (!r[1]?.includes('@')) continue;
+    const skip = ['Executivo','Executivos / Carteiras','Antonio','Ana','Total','Total Equipe',''];
+    if (skip.includes(c0)) continue;
+    if (!c1.includes('@')) continue;
 
     const row: ExecRow = {
-      executivo:   col0,
-      email:       r[1]?.trim() ?? '',
-      carteira:    r[2]?.trim() ?? '',
-      assignado:   cleanNumber(r[3] ?? '0'),
-      completo:    cleanNumber(r[4] ?? '0'),
-      parcial:     cleanNumber(r[5] ?? '0'),
-      depositoTotal: cleanNumber(r[6] ?? '0'),
-      pctCompleto: cleanNumber(r[7] ?? '0'),
-      atingimento: cleanNumber(r[8] ?? '0'),
-      metaDeposito: cleanNumber(r[9] ?? '0'),
-      wpp:         cleanNumber(r[10] ?? '0'),
-      wppMeetTel:  cleanNumber(r[11] ?? '0'),
-      pctContato:  cleanNumber(r[12] ?? '0'),
-      montoBaixas: cleanNumber(r[13] ?? '0'),
-      pctBaixas:   cleanNumber(r[14] ?? '0'),
-      metaBaixas:  cleanNumber(r[15] ?? '0'),
-      equipe:      currentEquipe,
+      executivo: c0, email: c1, carteira: c2,
+      assignado:    cleanNum(r[3]  ?? '0'),
+      completo:     cleanNum(r[4]  ?? '0'),
+      parcial:      cleanNum(r[5]  ?? '0'),
+      depositoTotal:cleanNum(r[6]  ?? '0'),
+      pctCompleto:  cleanNum(r[7]  ?? '0'),
+      atingimento:  cleanNum(r[8]  ?? '0'),
+      metaDeposito: cleanNum(r[9]  ?? '0'),
+      wpp:          cleanNum(r[10] ?? '0'),
+      wppMeetTel:   cleanNum(r[11] ?? '0'),
+      pctContato:   cleanNum(r[12] ?? '0'),
+      montoBaixas:  cleanNum(r[13] ?? '0'),
+      pctBaixas:    cleanNum(r[14] ?? '0'),
+      metaBaixas:   cleanNum(r[15] ?? '0'),
+      equipe,
     };
     execRows.push(row);
-    if (currentEquipe === 'Antonio') equipe1Rows.push(row);
-    else equipe2Rows.push(row);
+    if (equipe === 'Antonio') team1.push(row); else team2.push(row);
   }
 
   function sumTeam(teamRows: ExecRow[], nome: string): ExecTotal {
-    const a = teamRows.reduce((s, r) => s + r.assignado, 0);
-    const c = teamRows.reduce((s, r) => s + r.completo, 0);
-    const p = teamRows.reduce((s, r) => s + r.parcial, 0);
-    const d = teamRows.reduce((s, r) => s + r.depositoTotal, 0);
-    const w = teamRows.reduce((s, r) => s + r.wpp, 0);
-    const t = teamRows.reduce((s, r) => s + r.wppMeetTel, 0);
-    const m = teamRows.reduce((s, r) => s + r.montoBaixas, 0);
-    return { nome, assignado: a, completo: c, parcial: p, depositoTotal: d,
-      pctCompleto: a > 0 ? (c / a) * 100 : 0, wpp: w, wppMeetTel: t,
-      pctContato: teamRows.length > 0 ? teamRows.reduce((s, r) => s + r.pctContato, 0) / teamRows.length : 0,
-      montoBaixas: m, pctBaixas: a > 0 ? (m / a) * 100 : 0 };
+    const a=teamRows.reduce((s,r)=>s+r.assignado,0), c=teamRows.reduce((s,r)=>s+r.completo,0);
+    const p=teamRows.reduce((s,r)=>s+r.parcial,0),   d=teamRows.reduce((s,r)=>s+r.depositoTotal,0);
+    const w=teamRows.reduce((s,r)=>s+r.wpp,0),       t=teamRows.reduce((s,r)=>s+r.wppMeetTel,0);
+    const m=teamRows.reduce((s,r)=>s+r.montoBaixas,0);
+    return { nome, assignado:a, completo:c, parcial:p, depositoTotal:d,
+      pctCompleto: a>0?(c/a)*100:0, wpp:w, wppMeetTel:t,
+      pctContato: teamRows.length>0?teamRows.reduce((s,r)=>s+r.pctContato,0)/teamRows.length:0,
+      montoBaixas:m, pctBaixas:a>0?(m/a)*100:0 };
   }
 
-  const equipe1Total = sumTeam(equipe1Rows, 'Antonio');
-  const equipe2Total = sumTeam(equipe2Rows, 'Ana');
-  const grandTotal: ExecTotal = {
-    nome: 'Total Geral',
-    assignado: equipe1Total.assignado + equipe2Total.assignado,
-    completo:  equipe1Total.completo  + equipe2Total.completo,
-    parcial:   equipe1Total.parcial   + equipe2Total.parcial,
-    depositoTotal: equipe1Total.depositoTotal + equipe2Total.depositoTotal,
-    pctCompleto: 0, wpp: equipe1Total.wpp + equipe2Total.wpp,
-    wppMeetTel: equipe1Total.wppMeetTel + equipe2Total.wppMeetTel,
-    pctContato: 0, montoBaixas: equipe1Total.montoBaixas + equipe2Total.montoBaixas, pctBaixas: 0,
+  const equipe1Total = sumTeam(team1, 'Antonio');
+  const equipe2Total = sumTeam(team2, 'Ana');
+  const gt: ExecTotal = {
+    nome:'Total Geral',
+    assignado:    equipe1Total.assignado    + equipe2Total.assignado,
+    completo:     equipe1Total.completo     + equipe2Total.completo,
+    parcial:      equipe1Total.parcial      + equipe2Total.parcial,
+    depositoTotal:equipe1Total.depositoTotal+ equipe2Total.depositoTotal,
+    pctCompleto:0, wpp:equipe1Total.wpp+equipe2Total.wpp,
+    wppMeetTel:equipe1Total.wppMeetTel+equipe2Total.wppMeetTel,
+    pctContato:0, montoBaixas:equipe1Total.montoBaixas+equipe2Total.montoBaixas, pctBaixas:0,
   };
-  const gt = grandTotal;
-  gt.pctCompleto = gt.assignado > 0 ? (gt.completo / gt.assignado) * 100 : 0;
-  gt.pctBaixas   = gt.assignado > 0 ? (gt.montoBaixas / gt.assignado) * 100 : 0;
+  gt.pctCompleto = gt.assignado>0?(gt.completo/gt.assignado)*100:0;
+  gt.pctBaixas   = gt.assignado>0?(gt.montoBaixas/gt.assignado)*100:0;
 
-  return { executivoRows: execRows, equipe1Total, equipe2Total, grandTotal };
+  return { executivoRows:execRows, equipe1Total, equipe2Total, grandTotal:gt };
 }
 
-// ─── Parser Resumo Baixas ────────────────────────────────────────────────────
+// ── Parser Resumo Baixas ──────────────────────────────────────────────────────
 
-function parseBaixasSheet(rows: string[][]): Partial<SheetData> {
-  function parseSection(srows: string[][], startLabel: string, endLabel?: string): BaixasRow[] {
-    const start = srows.findIndex(r => r[0]?.trim() === startLabel);
+function parseBaixas(rows: string[][]): Partial<SheetData> {
+  function parseSection(startLabel: string, endLabel: string, hasRep: boolean): BaixasRow[] {
+    const start = findRow(rows, startLabel);
     if (start < 0) return [];
-    const end = endLabel ? srows.findIndex((r, i) => i > start && r[0]?.trim() === endLabel) : srows.length;
-    const section = srows.slice(start + 1, end > 0 ? end : srows.length);
+    const end = endLabel ? findRow(rows, endLabel, start+1) : rows.length;
+    const section = rows.slice(start, end > 0 ? end : rows.length);
     const result: BaixasRow[] = [];
     for (const r of section) {
-      const label = r[0]?.trim() ?? '';
-      if (!label || label === 'Clientes' || label === 'Monto' || label === 'Dívida') continue;
-      if (!r[1] && !r[2]) continue;
+      const label = (r[0]??'').trim();
+      if (!label || isEmpty(r)) continue;
+      if (['Clientes','Monto','Dívida','Carteira Primária','Carteira Secundária',
+           'Assignado','Solicitados','Mês atual'].includes(label)) continue;
       result.push({
-        label,
-        isTotal: label === 'Total',
-        assignado:    cleanNumber(r[1] ?? '0'),
-        solicitados:  cleanNumber(r[2] ?? '0'),
-        confirmado:   cleanNumber(r[3] ?? '0'),
-        retido:       cleanNumber(r[4] ?? '0'),
-        pendente:     cleanNumber(r[5] ?? '0'),
-        baixaPrevista: cleanNumber(r[6] ?? '0'),
-        pctBaixas:    cleanNumber(r[7] ?? '0'),
-        pctRetido:    cleanNumber(r[8] ?? '0'),
-        rep:          r[9] ? cleanNumber(r[9]) : undefined,
+        label, isTotal: label === 'Total',
+        assignado:    cleanNum(r[1]??'0'),
+        solicitados:  cleanNum(r[2]??'0'),
+        confirmado:   cleanNum(r[3]??'0'),
+        retido:       cleanNum(r[4]??'0'),
+        pendente:     cleanNum(r[5]??'0'),
+        baixaPrevista:cleanNum(r[6]??'0'),
+        pctBaixas:    cleanNum(r[7]??'0'),
+        pctRetido:    cleanNum(r[8]??'0'),
+        rep: hasRep && r[9] ? cleanNum(r[9]) : undefined,
       });
     }
     return result;
   }
 
-  const primClientes = parseSection(rows, 'Carteira Primária', 'Monto');
-  const primDivida   = parseSection(rows, 'Monto', 'Carteira Secundária');
-  const secClientes  = parseSection(rows, 'Carteira Secundária', 'Dívida');
-  const secDivida    = parseSection(rows, 'Dívida', 'Mês atual');
-
   return {
-    baixasPrimClientes: primClientes,
-    baixasPrimDivida:   primDivida,
-    baixasSecClientes:  secClientes,
-    baixasSecDivida:    secDivida,
+    baixasPrimClientes: parseSection('Clientes',           'Monto',              false),
+    baixasPrimDivida:   parseSection('Monto',              'Carteira Secundária', false),
+    baixasSecClientes:  parseSection('Carteira Secundária','Dívida',              true),
+    baixasSecDivida:    parseSection('Dívida',             'Mês atual',           true),
   };
 }
 
-// ─── Hook principal ───────────────────────────────────────────────────────────
+// ── Hook principal ────────────────────────────────────────────────────────────
 
 export function useSheetData() {
   const [data, setData]       = useState<SheetData | null>(null);
@@ -335,24 +298,20 @@ export function useSheetData() {
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
   const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     try {
       const [depRows, execRows, baixasRows] = await Promise.all([
         fetchSheet(SHEET_URLS.resumoDepositos),
         fetchSheet(SHEET_URLS.resumoExecutivo),
         fetchSheet(SHEET_URLS.resumoBaixas),
       ]);
-
-      const dep    = parseDepositosSheet(depRows);
-      const exec   = parseExecutivoSheet(execRows);
-      const baixas = parseBaixasSheet(baixasRows);
-
+      const dep    = parseDepositos(depRows);
+      const exec   = parseExecutivo(execRows);
+      const baixas = parseBaixas(baixasRows);
       setData({ ...dep, ...exec, ...baixas } as SheetData);
       setLastUpdated(new Date());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao carregar dados');
-      console.error('Erro ao carregar planilha:', e);
     } finally {
       setLoading(false);
     }
@@ -360,8 +319,8 @@ export function useSheetData() {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 5 * 60 * 1000); // refresh a cada 5 min
-    return () => clearInterval(interval);
+    const id = setInterval(load, 5 * 60 * 1000);
+    return () => clearInterval(id);
   }, [load]);
 
   return { data, loading, error, lastUpdated, refresh: load };

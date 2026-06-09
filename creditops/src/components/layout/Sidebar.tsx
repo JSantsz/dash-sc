@@ -32,8 +32,8 @@ export function Sidebar() {
           <LayoutDashboard size={16} color="#fff"/>
         </div>
         <div>
-          <div style={{ fontSize:'0.82rem', fontWeight:700, color:'var(--d-text)' }}>CreditOps</div>
-          <div style={{ fontSize:'0.65rem', color:'var(--d-text-dim)' }}>Dashboard Executivo</div>
+          <div style={{ fontSize:'0.82rem', fontWeight:700, color:'var(--d-text)' }}>Gerencial</div>
+          <div style={{ fontSize:'0.65rem', color:'var(--d-text-dim)' }}>Serviço ao Cliente</div>
         </div>
       </div>
       <div style={{ padding:'0.5rem 0.5rem', flex:1 }}>
@@ -51,7 +51,7 @@ export function Sidebar() {
         <div className="dash-divider" style={{ margin:'0.5rem 0.25rem' }}/>
         <NavLink to="/resumo-baixas" className={({isActive:a})=>`nav-item top-level${a?' active':''}`}><TrendingDown size={15}/>Resumo Baixas</NavLink>
       </div>
-      <div style={{ borderTop:'1px solid var(--d-border)', padding:'0.75rem 1rem', fontSize:'0.65rem', color:'var(--d-text-dim)', textAlign:'center' }}>v1.0 · Recuperação de Crédito</div>
+      <div style={{ borderTop:'1px solid var(--d-border)', padding:'0.75rem 1rem', fontSize:'0.65rem', color:'var(--d-text-dim)', textAlign:'center' }}>v1.0 · Serviço ao Cliente</div>
     </nav>
   );
 }
