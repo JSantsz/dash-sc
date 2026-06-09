@@ -336,3 +336,59 @@
 
 /* Divider */
 .dash-divider { height: 1px; background: var(--d-border); margin: 0.5rem 0; }
+
+/* ── Tabs fix ── */
+[role="tablist"] {
+  display: flex;
+  gap: 4px;
+  background: var(--d-card);
+  border: 1px solid var(--d-border);
+  border-radius: 8px;
+  padding: 4px;
+  flex-wrap: wrap;
+}
+
+[role="tab"] {
+  background: transparent !important;
+  border: none !important;
+  cursor: pointer;
+  color: var(--d-text-muted) !important;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.78rem;
+  border-radius: 6px;
+  transition: all 0.15s;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+[role="tab"]:hover {
+  color: var(--d-text) !important;
+  background: rgba(128,98,222,0.12) !important;
+}
+
+[role="tab"][data-state="active"] {
+  background: var(--d-accent-muted) !important;
+  color: var(--d-accent-light) !important;
+  font-weight: 600;
+}
+
+[role="tabpanel"] {
+  outline: none;
+}
+
+/* ── Layout refinements ── */
+.dash-content {
+  padding: 1.5rem !important;
+  background: var(--d-bg);
+}
+
+/* Remove inline TabsList styles conflicting */
+.tabs-list-override {
+  background: var(--d-card);
+  border: 1px solid var(--d-border);
+  border-radius: 8px;
+  padding: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}

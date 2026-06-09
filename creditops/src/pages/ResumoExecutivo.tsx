@@ -145,7 +145,7 @@ export default function ResumoExecutivo() {
         <KPICard label="Atingimento Médio" value={`${avgAting.toFixed(1)}%`}             status={statusKpi(avgAting)}/>
       </div>
       <Tabs defaultValue="tabela">
-        <TabsList style={{ background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:8, padding:4, display:'flex' }}>
+        <TabsList className="tabs-list-override">
           {[['tabela','Tabela'],['ranking','Ranking']].map(([v,l])=>(
             <TabsTrigger key={v} value={v!} style={{ fontSize:'0.78rem', borderRadius:6, padding:'0.3rem 0.85rem' }}>{l}</TabsTrigger>
           ))}

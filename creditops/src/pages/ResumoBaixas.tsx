@@ -98,7 +98,7 @@ export default function ResumoBaixas() {
       )}
 
       <Tabs defaultValue="primaria">
-        <TabsList style={{ background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:8, padding:4, display:'flex', flexWrap:'wrap', gap:2 }}>
+        <TabsList className="tabs-list-override">
           {[['primaria','Cart. Primária'],['secundaria','Cart. Secundária'],['consolidado','Consolidado'],['indicadores','Indicadores'],['ranking','Ranking']].map(([v,l]) => (
             <TabsTrigger key={v} value={v!} style={{ fontSize:'0.76rem', borderRadius:6, padding:'0.28rem 0.8rem' }}>{l}</TabsTrigger>
           ))}
