@@ -1,3 +1,8 @@
+/* ===== Reset ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { margin: 0; padding: 0; background: #0f0c1a; overflow-x: hidden; }
+#root { margin: 0; padding: 0; }
+
 /* ===== Dashboard Dark Theme ===== */
 .dashboard-root {
   --d-bg: #0f0c1a;
