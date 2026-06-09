@@ -8,6 +8,17 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const TT = { background:'#201b36', border:'1px solid #3a2d55', borderRadius:6, fontSize:12, color:'#e8e4f0' };
 
+function RankTooltip({ active, payload }: { active?: boolean; payload?: { value: number; payload: { nome: string } }[] }) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0]!;
+  return (
+    <div style={{ background:'#201b36', border:'1px solid #3a2d55', borderRadius:6, padding:'8px 12px' }}>
+      <div style={{ color:'#e8e4f0', fontWeight:600, fontSize:12, marginBottom:4 }}>{p.payload.nome}</div>
+      <div style={{ color:'#aa97ef', fontSize:12 }}>Dep. Total: <span style={{ color:'#e8e4f0', fontWeight:700 }}>{p.value.toLocaleString('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 })}</span></div>
+    </div>
+  );
+}
+
 function shortName(email: string) {
   const p = email.split('@')[0] ?? email;
   return p.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
@@ -107,7 +118,7 @@ export default function Overview() {
               tickFormatter={(v:string) => v.split(' ')[0] ?? v}/>
             <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}
               tickFormatter={(v:unknown) => formatCurrency(Number(v),true)}/>
-            <Tooltip contentStyle={TT} formatter={(v:unknown) => [formatCurrency(Number(v),true), 'Dep. Total']}/>
+            <Tooltip content={<RankTooltip/>}/>
             <Bar dataKey="deposito" name="Dep. Total" radius={[3,3,0,0]}>
               {rankingOperadores.map((_,i) => <Cell key={i} fill={i===0?'#aa97ef':'#8062de'} opacity={1-i*0.08}/>)}
             </Bar>

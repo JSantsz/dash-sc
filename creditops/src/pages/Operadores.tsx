@@ -8,6 +8,26 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const TT = { background:'#201b36', border:'1px solid #3a2d55', borderRadius:6, fontSize:12, color:'#e8e4f0' };
 
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: {name:string; value:number}[]; label?: string }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{ background:'#201b36', border:'1px solid #3a2d55', borderRadius:6, padding:'8px 12px' }}>
+      <div style={{ color:'#e8e4f0', fontWeight:600, fontSize:12, marginBottom:4 }}>{label}</div>
+      {payload.map((p, i) => (
+        <div key={i} style={{ color:'#aa97ef', fontSize:12 }}>
+          {p.name}: <span style={{ color:'#e8e4f0', fontWeight:700 }}>
+            {typeof p.value === 'number' && p.value > 10000
+              ? p.value.toLocaleString('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 })
+              : typeof p.value === 'number' && p.name?.includes('%')
+              ? `${p.value.toFixed(1)}%`
+              : p.value?.toLocaleString('pt-BR')}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function shortName(email: string) {
   const p = email.split('@')[0] ?? email;
   return p.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
@@ -117,7 +137,7 @@ export default function Operadores() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.6)" vertical={false}/>
               <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-30} textAnchor="end" height={50}/>
               <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
-              <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatCurrency(Number(v),true),'Dep. Total']}/>
+              <Tooltip content={<CustomTooltip/>}/>
               <Bar dataKey="deposito" name="Dep. Total" radius={[3,3,0,0]}>
                 {barData.map((_,i)=><Cell key={i} fill={i===0?'#aa97ef':'#8062de'} opacity={1-i*0.07}/>)}
               </Bar>
@@ -140,7 +160,7 @@ export default function Operadores() {
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.6)" vertical={false}/>
             <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-30} textAnchor="end" height={50}/>
             <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
-            <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatNumber(Number(v)),'Localizados']}/>
+            <Tooltip content={<CustomTooltip/>}/>
             <Bar dataKey="value" name="Localizados" radius={[3,3,0,0]}>
               {locData.map((_,i)=><Cell key={i} fill='#17789c' opacity={1-i*0.07}/>)}
             </Bar>
