@@ -59,6 +59,8 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: calc(100% - var(--d-sidebar-w));
+  min-width: 0;
 }
 
 .dash-header {
@@ -391,4 +393,33 @@
   display: flex;
   flex-wrap: wrap;
   gap: 2px;
+}
+
+/* ── Full width fixes ── */
+.dashboard-root {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.dash-header {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.dash-content {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow-x: auto;
+}
+
+/* Tables stretch full width */
+.op-table-wrapper,
+.gen-table-wrapper {
+  width: 100%;
+}
+
+/* Page content fills width */
+.dash-content > * {
+  width: 100%;
+  min-width: 0;
 }
