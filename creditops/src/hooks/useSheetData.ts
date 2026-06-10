@@ -160,19 +160,24 @@ function parseDepositos(rows: string[][]): Partial<SheetData> {
   const completoD  = primRows.find(r => (r[0]??'').trim() === 'Completo' && r[1] && cleanNum(r[1]) > 1000000);
   const completoPct= primRows.find(r => (r[0]??'').trim() === 'Completo %');
 
+  // Promessas Vigentes: soma Vigente (clientes) na seção Promessas
+  const promBlock   = sliceBetween(primRows, 'Promessas', ['Depósito', 'Carteira Secundária']);
+  const vigenteRow  = promBlock.find(r => (r[0]??'').trim().toLowerCase() === 'vigente');
+
   const totalClientes   = cleanNum(assignRow?.[1]  ?? '0');
   const totalDivida     = cleanNum(dividaRow?.[1]  ?? '0');
   const localizados     = cleanNum(totalLoc?.[1]   ?? '0');
   const depositos       = cleanNum(completoC?.[1]  ?? '0');
   const valorRecuperado = cleanNum(completoD?.[1]  ?? '0');
   const depPct          = cleanNum(completoPct?.[1]?? '0');
+  const promessas       = cleanNum(vigenteRow?.[1] ?? '0');
 
   const kpis: SheetKPIs = {
     carteiraTotalClientes: totalClientes,
     carteiraTotalValor:    totalDivida,
     clientesLocalizados:   localizados,
     clientesLocalizadosPct: totalClientes > 0 ? Math.round((localizados/totalClientes)*100) : 0,
-    promessasVigentes:     0,
+    promessasVigentes:     promessas,
     depositosCompletos:    depositos,
     depositosCompletosPct: depPct,
     valorRecuperado,

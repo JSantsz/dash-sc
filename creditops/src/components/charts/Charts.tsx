@@ -23,11 +23,11 @@ export function FunnelOperacional({ totalClientes, localizados, promessas, depos
   const data = [
     { name:'Carteira',    value: totalClientes ?? 2684, fill:'#8062de' },
     { name:'Localizados', value: localizados   ?? 2010, fill:'#aa97ef' },
-    { name:'Promessas',   value: promessas     ?? 663,  fill:'#aa6cc9' },
     { name:'Depósitos',   value: depositos     ?? 537,  fill:'#21ade0' },
+    { name:'Promessas',   value: promessas     ?? 663,  fill:'#aa6cc9' },
   ];
   return (
-    <ChartCard title="Funil Operacional" subtitle="Carteira → Localizados → Promessas → Depósitos">
+    <ChartCard title="Funil Operacional" subtitle="Carteira → Localizados → Depósitos → Promessas">
       <ResponsiveContainer width="100%" height="100%">
         <FunnelChart>
           <Tooltip contentStyle={TT} formatter={(v) => [(Number(v)).toLocaleString('pt-BR'), 'Clientes']} />
