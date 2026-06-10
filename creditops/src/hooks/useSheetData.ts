@@ -30,6 +30,14 @@ export interface BaixasRow {
   pctBaixas: number; pctRetido: number; rep?: number; isTotal?: boolean;
 }
 
+export interface LigacaoRow {
+  data:       string; // "02/06/2026"
+  agent:      string; // "lauryn.aguiar@gobravo.com.br"
+  hora:       string; // "09h"
+  tentativas: number;
+  efetivas:   number;
+}
+
 export interface SheetData {
   kpis: SheetKPIs;
   primaryLocalizados: OpTable[]; primaryPromessas: OpTable[]; primaryDepositos: OpTable[];
@@ -37,6 +45,7 @@ export interface SheetData {
   executivoRows: ExecRow[]; equipe1Total: ExecTotal; equipe2Total: ExecTotal; grandTotal: ExecTotal;
   baixasPrimClientes: BaixasRow[]; baixasPrimDivida: BaixasRow[];
   baixasSecClientes: BaixasRow[]; baixasSecDivida: BaixasRow[];
+  ligacoes: LigacaoRow[];
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -289,6 +298,22 @@ function parseBaixas(rows: string[][]): Partial<SheetData> {
   };
 }
 
+// ── Parser Resumo Ligações ────────────────────────────────────────────────────
+
+function parseLigacoes(rows: string[][]): LigacaoRow[] {
+  if (rows.length < 2) return [];
+  // Pula header
+  return rows.slice(1)
+    .filter(r => r[0] && r[1] && r[2])
+    .map(r => ({
+      data:       r[0].trim(),
+      agent:      r[1].trim(),
+      hora:       r[2].trim(),
+      tentativas: Number(r[3]) || 0,
+      efetivas:   Number(r[4]) || 0,
+    }));
+}
+
 // ── Hook principal ────────────────────────────────────────────────────────────
 
 export function useSheetData() {
@@ -300,15 +325,17 @@ export function useSheetData() {
   const load = useCallback(async () => {
     setLoading(true); setError(null);
     try {
-      const [depRows, execRows, baixasRows] = await Promise.all([
+      const [depRows, execRows, baixasRows, ligacoesRows] = await Promise.all([
         fetchSheet(SHEET_URLS.resumoDepositos),
         fetchSheet(SHEET_URLS.resumoExecutivo),
         fetchSheet(SHEET_URLS.resumoBaixas),
+        fetchSheet(SHEET_URLS.resumoLigacoes),
       ]);
-      const dep    = parseDepositos(depRows);
-      const exec   = parseExecutivo(execRows);
-      const baixas = parseBaixas(baixasRows);
-      setData({ ...dep, ...exec, ...baixas } as SheetData);
+      const dep      = parseDepositos(depRows);
+      const exec     = parseExecutivo(execRows);
+      const baixas   = parseBaixas(baixasRows);
+      const ligacoes = parseLigacoes(ligacoesRows);
+      setData({ ...dep, ...exec, ...baixas, ligacoes } as SheetData);
       setLastUpdated(new Date());
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Erro ao carregar dados');

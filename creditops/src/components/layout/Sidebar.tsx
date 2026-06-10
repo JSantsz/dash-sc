@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, ChevronDown, ChevronRight, Inbox, Building2, CreditCard, Award, TrendingDown } from 'lucide-react';
+import { LayoutDashboard, Users, ChevronDown, ChevronRight, Inbox, Building2, CreditCard, Award, TrendingDown, Phone } from 'lucide-react';
 interface NavLeaf { label:string; to:string; }
 const RESUMO_SUBGROUPS = [
   { label:'Carteira Primária',   icon:<CreditCard size={13}/>, children:[{label:'Localizados',to:'/resumo/primaria/localizados'},{label:'Promessas',to:'/resumo/primaria/promessas'},{label:'Depósitos',to:'/resumo/primaria/depositos'}] },
@@ -50,6 +50,8 @@ export function Sidebar() {
         <NavLink to="/resumo-executivo" className={({isActive:a})=>`nav-item top-level${a?' active':''}`}><Award size={15}/>Resumo Executivo</NavLink>
         <div className="dash-divider" style={{ margin:'0.5rem 0.25rem' }}/>
         <NavLink to="/resumo-baixas" className={({isActive:a})=>`nav-item top-level${a?' active':''}`}><TrendingDown size={15}/>Resumo Baixas</NavLink>
+        <div className="dash-divider" style={{ margin:'0.5rem 0.25rem' }}/>
+        <NavLink to="/ligacoes" className={({isActive:a})=>`nav-item top-level${a?' active':''}`}><Phone size={15}/>Ligações</NavLink>
       </div>
       <div style={{ borderTop:'1px solid var(--d-border)', padding:'0.75rem 1rem', fontSize:'0.65rem', color:'var(--d-text-dim)', textAlign:'center' }}>v1.0 · Serviço ao Cliente</div>
     </nav>
