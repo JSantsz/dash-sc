@@ -169,34 +169,56 @@ export default function Operadores() {
         </ResponsiveContainer>
       </ChartCard>
 
-      {/* Tabela detalhada */}
+      {/* Tabela detalhada por carteira */}
       <div className="dash-card" style={{ overflow:'hidden' }}>
-        <div style={{ padding:'0.6rem 1rem', borderBottom:'1px solid var(--d-border)', fontSize:'0.78rem', fontWeight:700, color:'var(--d-accent-light)' }}>Detalhamento por Executivo</div>
+        <div style={{ padding:'0.6rem 1rem', borderBottom:'1px solid var(--d-border)', fontSize:'0.78rem', fontWeight:700, color:'var(--d-accent-light)' }}>Detalhamento por Carteira</div>
         <div className="gen-table-wrapper" style={{ borderRadius:0, border:'none' }}>
           <table className="gen-table">
             <thead>
               <tr>
-                {['Executivo','Equipe','Carteiras','Assignado','Completo','Parcial','Dep. Total','% Completo','Atingimento','Localizados','% Baixas'].map(h=>(
+                {['Executivo','Equipe','Assignado','Completo','Parcial','Dep. Total','% Completo','Atingimento','Localizados','% Baixas'].map(h=>(
                   <th key={h}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {executivos.map((e,i) => (
-                <tr key={i}>
-                  <td style={{ fontWeight:600 }}>{e.nome}</td>
-                  <td><span style={{ background:e.equipe==='Antonio'?'rgba(170,108,201,0.15)':'rgba(33,173,224,0.15)', color:e.equipe==='Antonio'?'var(--d-purple-mid)':'var(--d-blue)', borderRadius:4, padding:'2px 7px', fontSize:'0.7rem' }}>{e.equipe}</span></td>
-                  <td style={{ color:'var(--d-text-muted)', fontSize:'0.72rem' }}>{e.carteiras.join(', ')}</td>
-                  <td style={{ textAlign:'right' }}>{formatCurrency(e.assignado,true)}</td>
-                  <td style={{ textAlign:'right', color:'var(--d-success)' }}>{formatCurrency(e.completo,true)}</td>
-                  <td style={{ textAlign:'right', color:e.parcial>0?'var(--d-warning)':'var(--d-text-muted)' }}>{formatCurrency(e.parcial,true)}</td>
-                  <td style={{ textAlign:'right', fontWeight:600 }}>{formatCurrency(e.depositoTotal,true)}</td>
-                  <td style={{ textAlign:'right' }}>{e.pctCompleto.toFixed(1)}%</td>
-                  <td style={{ textAlign:'right', fontWeight:700, color:e.atingimento>=100?'var(--d-success)':e.atingimento>=70?'var(--d-warning)':'var(--d-danger)' }}>{e.atingimento.toFixed(1)}%</td>
-                  <td style={{ textAlign:'right' }}>{formatNumber(e.totalLoc)}</td>
-                  <td style={{ textAlign:'right', color:e.pctBaixas<=5?'var(--d-success)':e.pctBaixas<=10?'var(--d-warning)':'var(--d-danger)' }}>{e.pctBaixas.toFixed(1)}%</td>
-                </tr>
-              ))}
+              {(() => {
+                // Agrupa linhas brutas por carteira
+                const rawRows = data?.executivoRows ?? [];
+                const carteiraMap = new Map<string, typeof rawRows>();
+                for (const r of rawRows) {
+                  if (!carteiraMap.has(r.carteira)) carteiraMap.set(r.carteira, []);
+                  carteiraMap.get(r.carteira)!.push(r);
+                }
+                return Array.from(carteiraMap.entries()).flatMap(([carteira, rows]) => [
+                  // Linha de cabeçalho da carteira
+                  <tr key={`section-${carteira}`} className="row-section-header">
+                    <td colSpan={10} style={{ fontWeight:700, fontSize:'0.75rem', textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--d-accent-light)', paddingLeft:'1rem' }}>
+                      {carteira}
+                    </td>
+                  </tr>,
+                  // Linhas dos executivos nessa carteira
+                  ...rows.map((r, i) => {
+                    const nome = shortName(r.email);
+                    const pctBaixas = r.assignado > 0 ? (r.montoBaixas / r.assignado) * 100 : 0;
+                    const totalLoc  = r.wpp + r.wppMeetTel;
+                    return (
+                      <tr key={`${carteira}-${i}`}>
+                        <td style={{ fontWeight:600, paddingLeft:'1.5rem' }}>{nome}</td>
+                        <td><span style={{ background:r.equipe==='Antonio'?'rgba(170,108,201,0.15)':'rgba(33,173,224,0.15)', color:r.equipe==='Antonio'?'var(--d-purple-mid)':'var(--d-blue)', borderRadius:4, padding:'2px 7px', fontSize:'0.7rem' }}>{r.equipe}</span></td>
+                        <td style={{ textAlign:'right' }}>{formatCurrency(r.assignado,true)}</td>
+                        <td style={{ textAlign:'right', color:'var(--d-success)' }}>{formatCurrency(r.completo,true)}</td>
+                        <td style={{ textAlign:'right', color:r.parcial>0?'var(--d-warning)':'var(--d-text-muted)' }}>{formatCurrency(r.parcial,true)}</td>
+                        <td style={{ textAlign:'right', fontWeight:600 }}>{formatCurrency(r.depositoTotal,true)}</td>
+                        <td style={{ textAlign:'right' }}>{r.pctCompleto.toFixed(1)}%</td>
+                        <td style={{ textAlign:'right', fontWeight:700, color:r.atingimento>=100?'var(--d-success)':r.atingimento>=70?'var(--d-warning)':'var(--d-danger)' }}>{r.atingimento.toFixed(1)}%</td>
+                        <td style={{ textAlign:'right' }}>{formatNumber(totalLoc)}</td>
+                        <td style={{ textAlign:'right', color:pctBaixas<=5?'var(--d-success)':pctBaixas<=10?'var(--d-warning)':'var(--d-danger)' }}>{pctBaixas.toFixed(1)}%</td>
+                      </tr>
+                    );
+                  }),
+                ]);
+              })()}
             </tbody>
           </table>
         </div>
