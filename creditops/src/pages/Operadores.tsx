@@ -65,72 +65,75 @@ function CarteiraTable({ rawRows }: { rawRows: NonNullable<ReturnType<typeof use
 
   return (
     <div className="dash-card" style={{ overflow: 'hidden' }}>
-      {/* Header */}
+      {/* Header + botões */}
       <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--d-border)' }}>
-        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--d-accent-light)', display: 'block', marginBottom: '0.6rem' }}>Detalhamento por Carteira</span>
+        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--d-accent-light)', display: 'block', marginBottom: '0.6rem' }}>
+          Detalhamento por Carteira
+        </span>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {carteiras.map(c => (
-            <button
-              key={c}
-              onClick={() => setSelected(c)}
-              style={{
-                padding: '4px 14px',
-                fontSize: '0.72rem',
-                fontWeight: 600,
-                borderRadius: 20,
-                cursor: 'pointer',
-                border: '1px solid',
-                transition: 'all 0.15s',
-                borderColor: c === currentCarteira ? 'var(--d-accent)' : 'var(--d-border)',
-                background: c === currentCarteira ? 'var(--d-accent)' : 'transparent',
-                color: c === currentCarteira ? '#fff' : 'var(--d-text-dim)',
-              }}
-            >
-              {c}
-            </button>
+            <button key={c} onClick={() => setSelected(c)} style={{
+              padding: '4px 14px', fontSize: '0.72rem', fontWeight: 600,
+              borderRadius: 20, cursor: 'pointer', border: '1px solid', transition: 'all 0.15s',
+              borderColor: c === currentCarteira ? 'var(--d-accent)' : 'var(--d-border)',
+              background: c === currentCarteira ? 'var(--d-accent)' : 'transparent',
+              color: c === currentCarteira ? '#fff' : 'var(--d-text-dim)',
+            }}>{c}</button>
           ))}
         </div>
       </div>
 
-      {/* Tabela */}
-      <div className="gen-table-wrapper" style={{ borderRadius: 0, border: 'none' }}>
-        <table className="gen-table">
-          <thead>
-            <tr>
-              {['Executivo','Equipe','Assignado','Completo','Parcial','Dep. Total','% Completo','Atingimento','Localizados','% Baixas'].map(h => (
-                <th key={h}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((r, i) => {
-              const nome     = shortName(r.email);
-              const pctBaixas = r.assignado > 0 ? (r.montoBaixas / r.assignado) * 100 : 0;
-              const totalLoc  = r.wpp + r.wppMeetTel;
-              return (
-                <tr key={i}>
-                  <td style={{ fontWeight: 600 }}>{nome}</td>
-                  <td>
-                    <span style={{
-                      background: r.equipe === 'Antonio' ? 'rgba(170,108,201,0.15)' : 'rgba(33,173,224,0.15)',
-                      color: r.equipe === 'Antonio' ? 'var(--d-purple-mid)' : 'var(--d-blue)',
-                      borderRadius: 4, padding: '2px 7px', fontSize: '0.7rem',
-                    }}>{r.equipe}</span>
-                  </td>
-                  <td style={{ textAlign: 'right' }}>{formatCurrency(r.assignado, true)}</td>
-                  <td style={{ textAlign: 'right', color: 'var(--d-success)' }}>{formatCurrency(r.completo, true)}</td>
-                  <td style={{ textAlign: 'right', color: r.parcial > 0 ? 'var(--d-warning)' : 'var(--d-text-muted)' }}>{formatCurrency(r.parcial, true)}</td>
-                  <td style={{ textAlign: 'right', fontWeight: 600 }}>{formatCurrency(r.depositoTotal, true)}</td>
-                  <td style={{ textAlign: 'right' }}>{r.pctCompleto.toFixed(1)}%</td>
-                  <td style={{ textAlign: 'right', fontWeight: 700, color: r.atingimento >= 100 ? 'var(--d-success)' : r.atingimento >= 70 ? 'var(--d-warning)' : 'var(--d-danger)' }}>{r.atingimento.toFixed(1)}%</td>
-                  <td style={{ textAlign: 'right' }}>{formatNumber(totalLoc)}</td>
-                  <td style={{ textAlign: 'right', color: pctBaixas <= 5 ? 'var(--d-success)' : pctBaixas <= 10 ? 'var(--d-warning)' : 'var(--d-danger)' }}>{pctBaixas.toFixed(1)}%</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+      {/* Cards por executivo */}
+      <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {rows.map((r, i) => {
+          const nome      = shortName(r.email);
+          const pctBaixas = r.assignado > 0 ? (r.montoBaixas / r.assignado) * 100 : 0;
+          const totalLoc  = r.wpp + r.wppMeetTel;
+          const atColor   = r.atingimento >= 100 ? 'var(--d-success)' : r.atingimento >= 70 ? 'var(--d-warning)' : 'var(--d-danger)';
+          const equipeColor = r.equipe === 'Antonio' ? 'var(--d-purple-mid)' : 'var(--d-blue)';
+          const equipeBg    = r.equipe === 'Antonio' ? 'rgba(170,108,201,0.15)' : 'rgba(33,173,224,0.15)';
+
+          return (
+            <div key={i} style={{
+              background: 'var(--d-surface)', borderRadius: 10,
+              border: '1px solid var(--d-border)', padding: '1rem 1.25rem',
+              display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+            }}>
+              {/* Nome + equipe */}
+              <div style={{ minWidth: 160, flex: '0 0 160px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--d-text)', marginBottom: 4 }}>{nome}</div>
+                <span style={{ background: equipeBg, color: equipeColor, borderRadius: 4, padding: '2px 8px', fontSize: '0.7rem', fontWeight: 600 }}>
+                  {r.equipe}
+                </span>
+              </div>
+
+              {/* Divisor */}
+              <div style={{ width: 1, height: 40, background: 'var(--d-border)', flexShrink: 0 }} />
+
+              {/* Métricas */}
+              <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', flex: 1 }}>
+                <Metric label="Assignado"   value={formatCurrency(r.assignado, true)} />
+                <Metric label="Completo"    value={formatCurrency(r.completo, true)}    color="var(--d-success)" />
+                <Metric label="Parcial"     value={formatCurrency(r.parcial, true)}     color={r.parcial > 0 ? 'var(--d-warning)' : undefined} />
+                <Metric label="Dep. Total"  value={formatCurrency(r.depositoTotal, true)} bold />
+                <Metric label="% Completo"  value={`${r.pctCompleto.toFixed(1)}%`} />
+                <Metric label="Atingimento" value={`${r.atingimento.toFixed(1)}%`} color={atColor} bold />
+                <Metric label="Localizados" value={formatNumber(totalLoc)} />
+                <Metric label="% Baixas"    value={`${pctBaixas.toFixed(1)}%`} color={pctBaixas <= 5 ? 'var(--d-success)' : pctBaixas <= 10 ? 'var(--d-warning)' : 'var(--d-danger)'} />
+              </div>
+            </div>
+          );
+        })}
       </div>
+    </div>
+  );
+}
+
+function Metric({ label, value, color, bold }: { label: string; value: string; color?: string; bold?: boolean }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <span style={{ fontSize: '0.68rem', color: 'var(--d-text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: '0.95rem', fontWeight: bold ? 700 : 600, color: color ?? 'var(--d-text)', whiteSpace: 'nowrap' }}>{value}</span>
     </div>
   );
 }
