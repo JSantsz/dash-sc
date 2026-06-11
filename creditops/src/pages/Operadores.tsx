@@ -97,7 +97,7 @@ export default function Operadores() {
       ex.pctCompleto = ex.assignado > 0 ? (ex.completo / ex.assignado) * 100 : 0;
       ex.pctBaixas   = ex.assignado > 0 ? (ex.montoBaixas / ex.assignado) * 100 : 0;
     }
-    return Array.from(map.values()).sort((a,b) => b.depositoTotal - a.depositoTotal);
+    return Array.from(map.values()).sort((a,b) => b.atingimento - a.atingimento);
   }, [data]);
 
   if (loading) return <div className="dash-loading"><RefreshCw size={20} style={{ animation:'spin 1s linear infinite', color:'var(--d-accent)' }}/>&nbsp;Carregando...<style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style></div>;
@@ -108,9 +108,9 @@ export default function Operadores() {
   const totalLoc       = executivos.reduce((s,e) => s+e.totalLoc, 0);
   const avgAting       = executivos.length > 0 ? executivos.reduce((s,e)=>s+e.atingimento,0)/executivos.length : 0;
   const avgPct         = totalAssignado > 0 ? (executivos.reduce((s,e)=>s+e.completo,0)/totalAssignado)*100 : 0;
-  const topExec        = executivos[0];
+  const topExec = executivos[0]; // já ordenado por atingimento
 
-  const barData = executivos.map(e => ({ name: e.nome.split(' ')[0]??e.nome, deposito: e.depositoTotal, ating: e.atingimento, loc: e.totalLoc }));
+  const barData = [...executivos].sort((a,b) => b.atingimento - a.atingimento).map(e => ({ name: e.nome.split(' ')[0]??e.nome, deposito: e.depositoTotal, ating: e.atingimento, loc: e.totalLoc }));
   const locData = [...executivos].sort((a,b)=>b.totalLoc-a.totalLoc).map(e => ({ name: e.nome.split(' ')[0]??e.nome, value: e.totalLoc }));
 
   return (
