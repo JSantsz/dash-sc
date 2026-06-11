@@ -65,17 +65,17 @@ function CarteiraTable({ rawRows }: { rawRows: NonNullable<ReturnType<typeof use
 
   return (
     <div className="dash-card" style={{ overflow: 'hidden' }}>
-      {/* Header + botões */}
-      <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid var(--d-border)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--d-accent-light)', marginRight: 4 }}>Detalhamento por Carteira</span>
+      {/* Header */}
+      <div style={{ padding: '0.75rem 1rem', borderBottom: '1px solid var(--d-border)' }}>
+        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--d-accent-light)', display: 'block', marginBottom: '0.6rem' }}>Detalhamento por Carteira</span>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {carteiras.map(c => (
             <button
               key={c}
               onClick={() => setSelected(c)}
               style={{
-                padding: '3px 12px',
-                fontSize: '0.7rem',
+                padding: '4px 14px',
+                fontSize: '0.72rem',
                 fontWeight: 600,
                 borderRadius: 20,
                 cursor: 'pointer',
