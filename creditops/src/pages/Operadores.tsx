@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Users, Trophy, TrendingUp, DollarSign, RefreshCw, AlertCircle } from 'lucide-react';
 import { ChartCard } from '../components/charts/Charts';
 import { KPICard } from '../components/shared/KPICard';
@@ -48,6 +48,88 @@ function RankingCard({ rank, nome, pctCompleto, atingimento }: {
       <div style={{ textAlign:'right', flexShrink:0 }}>
         <div style={{ fontWeight:700, fontSize:'0.88rem', color:atColor }}>{atingimento.toFixed(1)}%</div>
         <div style={{ fontSize:'0.65rem', color:'var(--d-text-dim)' }}>atingimento</div>
+      </div>
+    </div>
+  );
+}
+
+function CarteiraTable({ rawRows }: { rawRows: NonNullable<ReturnType<typeof useSheetData>['data']>['executivoRows'] }) {
+  const carteiras = useMemo(() => {
+    const seen = new Set<string>();
+    return rawRows.map(r => r.carteira).filter(c => { if (seen.has(c)) return false; seen.add(c); return true; });
+  }, [rawRows]);
+
+  const [selected, setSelected] = useState<string>(carteiras[0] ?? '');
+  const currentCarteira = selected || carteiras[0] || '';
+  const rows = rawRows.filter(r => r.carteira === currentCarteira);
+
+  return (
+    <div className="dash-card" style={{ overflow: 'hidden' }}>
+      {/* Header + botões */}
+      <div style={{ padding: '0.6rem 1rem', borderBottom: '1px solid var(--d-border)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--d-accent-light)', marginRight: 4 }}>Detalhamento por Carteira</span>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {carteiras.map(c => (
+            <button
+              key={c}
+              onClick={() => setSelected(c)}
+              style={{
+                padding: '3px 12px',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                borderRadius: 20,
+                cursor: 'pointer',
+                border: '1px solid',
+                transition: 'all 0.15s',
+                borderColor: c === currentCarteira ? 'var(--d-accent)' : 'var(--d-border)',
+                background: c === currentCarteira ? 'var(--d-accent)' : 'transparent',
+                color: c === currentCarteira ? '#fff' : 'var(--d-text-dim)',
+              }}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tabela */}
+      <div className="gen-table-wrapper" style={{ borderRadius: 0, border: 'none' }}>
+        <table className="gen-table">
+          <thead>
+            <tr>
+              {['Executivo','Equipe','Assignado','Completo','Parcial','Dep. Total','% Completo','Atingimento','Localizados','% Baixas'].map(h => (
+                <th key={h}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => {
+              const nome     = shortName(r.email);
+              const pctBaixas = r.assignado > 0 ? (r.montoBaixas / r.assignado) * 100 : 0;
+              const totalLoc  = r.wpp + r.wppMeetTel;
+              return (
+                <tr key={i}>
+                  <td style={{ fontWeight: 600 }}>{nome}</td>
+                  <td>
+                    <span style={{
+                      background: r.equipe === 'Antonio' ? 'rgba(170,108,201,0.15)' : 'rgba(33,173,224,0.15)',
+                      color: r.equipe === 'Antonio' ? 'var(--d-purple-mid)' : 'var(--d-blue)',
+                      borderRadius: 4, padding: '2px 7px', fontSize: '0.7rem',
+                    }}>{r.equipe}</span>
+                  </td>
+                  <td style={{ textAlign: 'right' }}>{formatCurrency(r.assignado, true)}</td>
+                  <td style={{ textAlign: 'right', color: 'var(--d-success)' }}>{formatCurrency(r.completo, true)}</td>
+                  <td style={{ textAlign: 'right', color: r.parcial > 0 ? 'var(--d-warning)' : 'var(--d-text-muted)' }}>{formatCurrency(r.parcial, true)}</td>
+                  <td style={{ textAlign: 'right', fontWeight: 600 }}>{formatCurrency(r.depositoTotal, true)}</td>
+                  <td style={{ textAlign: 'right' }}>{r.pctCompleto.toFixed(1)}%</td>
+                  <td style={{ textAlign: 'right', fontWeight: 700, color: r.atingimento >= 100 ? 'var(--d-success)' : r.atingimento >= 70 ? 'var(--d-warning)' : 'var(--d-danger)' }}>{r.atingimento.toFixed(1)}%</td>
+                  <td style={{ textAlign: 'right' }}>{formatNumber(totalLoc)}</td>
+                  <td style={{ textAlign: 'right', color: pctBaixas <= 5 ? 'var(--d-success)' : pctBaixas <= 10 ? 'var(--d-warning)' : 'var(--d-danger)' }}>{pctBaixas.toFixed(1)}%</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -170,59 +252,7 @@ export default function Operadores() {
       </ChartCard>
 
       {/* Tabela detalhada por carteira */}
-      <div className="dash-card" style={{ overflow:'hidden' }}>
-        <div style={{ padding:'0.6rem 1rem', borderBottom:'1px solid var(--d-border)', fontSize:'0.78rem', fontWeight:700, color:'var(--d-accent-light)' }}>Detalhamento por Carteira</div>
-        <div className="gen-table-wrapper" style={{ borderRadius:0, border:'none' }}>
-          <table className="gen-table">
-            <thead>
-              <tr>
-                {['Executivo','Equipe','Assignado','Completo','Parcial','Dep. Total','% Completo','Atingimento','Localizados','% Baixas'].map(h=>(
-                  <th key={h}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {(() => {
-                // Agrupa linhas brutas por carteira
-                const rawRows = data?.executivoRows ?? [];
-                const carteiraMap = new Map<string, typeof rawRows>();
-                for (const r of rawRows) {
-                  if (!carteiraMap.has(r.carteira)) carteiraMap.set(r.carteira, []);
-                  carteiraMap.get(r.carteira)!.push(r);
-                }
-                return Array.from(carteiraMap.entries()).flatMap(([carteira, rows]) => [
-                  // Linha de cabeçalho da carteira
-                  <tr key={`section-${carteira}`} className="row-section-header">
-                    <td colSpan={10} style={{ fontWeight:700, fontSize:'0.75rem', textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--d-accent-light)', paddingLeft:'1rem' }}>
-                      {carteira}
-                    </td>
-                  </tr>,
-                  // Linhas dos executivos nessa carteira
-                  ...rows.map((r, i) => {
-                    const nome = shortName(r.email);
-                    const pctBaixas = r.assignado > 0 ? (r.montoBaixas / r.assignado) * 100 : 0;
-                    const totalLoc  = r.wpp + r.wppMeetTel;
-                    return (
-                      <tr key={`${carteira}-${i}`}>
-                        <td style={{ fontWeight:600, paddingLeft:'1.5rem' }}>{nome}</td>
-                        <td><span style={{ background:r.equipe==='Antonio'?'rgba(170,108,201,0.15)':'rgba(33,173,224,0.15)', color:r.equipe==='Antonio'?'var(--d-purple-mid)':'var(--d-blue)', borderRadius:4, padding:'2px 7px', fontSize:'0.7rem' }}>{r.equipe}</span></td>
-                        <td style={{ textAlign:'right' }}>{formatCurrency(r.assignado,true)}</td>
-                        <td style={{ textAlign:'right', color:'var(--d-success)' }}>{formatCurrency(r.completo,true)}</td>
-                        <td style={{ textAlign:'right', color:r.parcial>0?'var(--d-warning)':'var(--d-text-muted)' }}>{formatCurrency(r.parcial,true)}</td>
-                        <td style={{ textAlign:'right', fontWeight:600 }}>{formatCurrency(r.depositoTotal,true)}</td>
-                        <td style={{ textAlign:'right' }}>{r.pctCompleto.toFixed(1)}%</td>
-                        <td style={{ textAlign:'right', fontWeight:700, color:r.atingimento>=100?'var(--d-success)':r.atingimento>=70?'var(--d-warning)':'var(--d-danger)' }}>{r.atingimento.toFixed(1)}%</td>
-                        <td style={{ textAlign:'right' }}>{formatNumber(totalLoc)}</td>
-                        <td style={{ textAlign:'right', color:pctBaixas<=5?'var(--d-success)':pctBaixas<=10?'var(--d-warning)':'var(--d-danger)' }}>{pctBaixas.toFixed(1)}%</td>
-                      </tr>
-                    );
-                  }),
-                ]);
-              })()}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <CarteiraTable rawRows={data?.executivoRows ?? []} />
     </div>
   );
 }
