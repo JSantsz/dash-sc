@@ -215,8 +215,20 @@ export default function Operadores() {
         {topExec && <KPICard label="Top Executivo" value={topExec.nome.split(' ')[0]!} icon={<Trophy size={14}/>} status="success" subValue={`${formatCurrency(topExec.depositoTotal,true)} · ${topExec.atingimento.toFixed(1)}% ating.`}/>}
       </div>
 
-      {/* Gráficos + Ranking */}
+      {/* Cards por carteira + Ranking */}
       <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:12 }}>
+        <CarteiraTable rawRows={data?.executivoRows ?? []} />
+
+        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+          <div style={{ fontSize:'0.82rem', fontWeight:700, color:'var(--d-text)', marginBottom:4 }}>🏆 Ranking Executivos</div>
+          {executivos.slice(0,6).map((e,i) => (
+            <RankingCard key={e.email} rank={i+1} nome={e.nome} pctCompleto={e.pctCompleto} atingimento={e.atingimento}/>
+          ))}
+        </div>
+      </div>
+
+      {/* Gráficos */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
         <ChartCard title="Depósito Total por Executivo" subtitle="Valor recuperado" height={260}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={barData} margin={{ top:4, right:12, left:-10, bottom:40 }}>
@@ -231,31 +243,20 @@ export default function Operadores() {
           </ResponsiveContainer>
         </ChartCard>
 
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          <div style={{ fontSize:'0.82rem', fontWeight:700, color:'var(--d-text)', marginBottom:4 }}>🏆 Ranking Executivos</div>
-          {executivos.slice(0,6).map((e,i) => (
-            <RankingCard key={e.email} rank={i+1} nome={e.nome} pctCompleto={e.pctCompleto} atingimento={e.atingimento}/>
-          ))}
-        </div>
+        <ChartCard title="Localização por Executivo" subtitle="WPP + Telefone/Meet" height={260}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={locData} margin={{ top:4, right:12, left:-10, bottom:40 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.6)" vertical={false}/>
+              <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-30} textAnchor="end" height={50}/>
+              <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
+              <Tooltip content={<CustomTooltip/>}/>
+              <Bar dataKey="value" name="Localizados" radius={[3,3,0,0]}>
+                {locData.map((_,i)=><Cell key={i} fill='#17789c' opacity={1-i*0.07}/>)}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
       </div>
-
-      {/* Gráfico localização */}
-      <ChartCard title="Localização por Executivo" subtitle="WPP + Telefone/Meet" height={220}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={locData} margin={{ top:4, right:12, left:-10, bottom:40 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.6)" vertical={false}/>
-            <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-30} textAnchor="end" height={50}/>
-            <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
-            <Tooltip content={<CustomTooltip/>}/>
-            <Bar dataKey="value" name="Localizados" radius={[3,3,0,0]}>
-              {locData.map((_,i)=><Cell key={i} fill='#17789c' opacity={1-i*0.07}/>)}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
-
-      {/* Tabela detalhada por carteira */}
-      <CarteiraTable rawRows={data?.executivoRows ?? []} />
     </div>
   );
 }
