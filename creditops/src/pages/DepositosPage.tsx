@@ -18,11 +18,12 @@ export default function DepositosPage() {
   const clientesTable = tables[0];
   const dividaTable   = tables[1];
 
-  const completoRow  = clientesTable?.rows.find(r => r.label === 'Completo');
-  const completoPct  = clientesTable?.rows.find(r => r.label === 'Completo %' || r.label === 'Completo%');
-  const parcialRow   = clientesTable?.rows.find(r => r.label === 'Parcial');
-  const semDepRow    = clientesTable?.rows.find(r => r.label === 'Sem Depósito');
-  const recDivida    = dividaTable?.rows.find(r => r.label === 'Completo')?.values[0] ?? '—';
+  const completoRow  = clientesTable?.rows.find(r => r.label.trim().toLowerCase() === 'completo');
+  const completoPct  = clientesTable?.rows.find(r => r.label.trim().toLowerCase().startsWith('completo %') || r.label.trim().toLowerCase() === 'completo%');
+  const parcialRow   = clientesTable?.rows.find(r => r.label.trim().toLowerCase() === 'parcial');
+  const semDepRow    = clientesTable?.rows.find(r => r.label.trim().toLowerCase() === 'sem depósito' || r.label.trim().toLowerCase() === 'sem deposito');
+  const recDividaRaw = dividaTable?.rows.find(r => r.label.trim().toLowerCase() === 'completo')?.values[0] ?? '0';
+  const recDivida    = formatCurrency(parseFloat(recDividaRaw.replace(/\./g,'').replace(',','.')) || 0, true);
   const pctVal       = parseFloat((completoPct?.values[0] ?? '0').replace('%','').replace(',','.')) || 0;
 
   return (
@@ -36,7 +37,7 @@ export default function DepositosPage() {
         <KPICard label="Depósitos Parciais"  value={parcialRow?.values[0]  ?? '—'} subValue="Acordos em andamento"   icon={<Clock size={14}/>}       status="warning"/>
         <KPICard label="Sem Depósito"        value={semDepRow?.values[0]   ?? '—'} subValue="Sem acordo registrado"  icon={<TrendingUp size={14}/>}  status="danger"/>
         <KPICard label="Taxa Conversão"      value={completoPct?.values[0] ?? '—'} subValue="Completos / Carteira"   icon={<Percent size={14}/>}     status="warning" progress={(pctVal/25)*100} meta="25%" realizado={completoPct?.values[0] ?? '—'}/>
-        <KPICard label="Dívida Recuperada"   value={`R$ ${recDivida}`}             subValue="Depósitos completos"    icon={<CheckCircle size={14}/>} status="success"/>
+        <KPICard label="Dívida Recuperada"   value={recDivida}                     subValue="Depósitos completos"    icon={<CheckCircle size={14}/>} status="success"/>
       </div>
       {clientesTable && <OperationalTable table={clientesTable}/>}
       {dividaTable   && <OperationalTable table={dividaTable}/>}
