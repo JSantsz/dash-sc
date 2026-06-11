@@ -33,20 +33,21 @@ function shortName(email: string) {
   return p.split('.').map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' ');
 }
 
-function RankingCard({ rank, nome, depositoTotal, pctCompleto, atingimento }: {
-  rank: number; nome: string; depositoTotal: number; pctCompleto: number; atingimento: number;
+function RankingCard({ rank, nome, pctCompleto, atingimento }: {
+  rank: number; nome: string; pctCompleto: number; atingimento: number;
 }) {
   const medal = rank===1?'#eab308':rank===2?'#9991b8':rank===3?'#cd7c2f':'var(--d-accent)';
+  const atColor = atingimento>=100?'var(--d-success)':atingimento>=70?'var(--d-warning)':'var(--d-danger)';
   return (
     <div className="dash-card" style={{ padding:'0.75rem 1rem', display:'flex', alignItems:'center', gap:12, borderLeft:`3px solid ${medal}` }}>
       <div style={{ width:32, height:32, borderRadius:'50%', background:`${medal}22`, display:'flex', alignItems:'center', justifyContent:'center', fontWeight:800, fontSize:'0.85rem', color:medal, flexShrink:0 }}>{rank}</div>
       <div style={{ flex:1, minWidth:0 }}>
         <div style={{ fontWeight:600, fontSize:'0.82rem', color:'var(--d-text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{nome}</div>
-        <div style={{ fontSize:'0.68rem', color:'var(--d-text-muted)' }}>{pctCompleto.toFixed(1)}% completo · {atingimento.toFixed(1)}% ating.</div>
+        <div style={{ fontSize:'0.68rem', color:'var(--d-text-muted)' }}>{pctCompleto.toFixed(1)}% completo</div>
       </div>
       <div style={{ textAlign:'right', flexShrink:0 }}>
-        <div style={{ fontWeight:700, fontSize:'0.82rem', color:'var(--d-success)' }}>{formatCurrency(depositoTotal,true)}</div>
-        <div style={{ fontSize:'0.65rem', color:'var(--d-text-dim)' }}>dep. total</div>
+        <div style={{ fontWeight:700, fontSize:'0.88rem', color:atColor }}>{atingimento.toFixed(1)}%</div>
+        <div style={{ fontSize:'0.65rem', color:'var(--d-text-dim)' }}>atingimento</div>
       </div>
     </div>
   );
@@ -148,7 +149,7 @@ export default function Operadores() {
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           <div style={{ fontSize:'0.82rem', fontWeight:700, color:'var(--d-text)', marginBottom:4 }}>🏆 Ranking Executivos</div>
           {executivos.slice(0,6).map((e,i) => (
-            <RankingCard key={e.email} rank={i+1} nome={e.nome} depositoTotal={e.depositoTotal} pctCompleto={e.pctCompleto} atingimento={e.atingimento}/>
+            <RankingCard key={e.email} rank={i+1} nome={e.nome} pctCompleto={e.pctCompleto} atingimento={e.atingimento}/>
           ))}
         </div>
       </div>
