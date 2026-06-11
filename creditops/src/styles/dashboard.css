@@ -304,16 +304,16 @@ html, body { margin: 0; padding: 0; background: #0f0c1a; overflow-x: hidden; }
 .gen-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
 }
 
 .gen-table th {
   background: var(--d-surface);
   color: var(--d-text-muted);
   font-weight: 600;
-  font-size: 0.7rem;
+  font-size: 0.78rem;
   letter-spacing: 0.04em;
-  padding: 0.55rem 0.75rem;
+  padding: 0.7rem 1rem;
   text-align: left;
   border-bottom: 1px solid var(--d-border);
   white-space: nowrap;
@@ -323,7 +323,7 @@ html, body { margin: 0; padding: 0; background: #0f0c1a; overflow-x: hidden; }
 .gen-table th:hover { color: var(--d-accent-light); }
 
 .gen-table td {
-  padding: 0.5rem 0.75rem;
+  padding: 0.7rem 1rem;
   border-bottom: 1px solid rgba(58, 45, 85, 0.4);
   color: var(--d-text);
   white-space: nowrap;
