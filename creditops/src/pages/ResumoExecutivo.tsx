@@ -71,8 +71,8 @@ function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:Ex
         <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
       </>;
       case 'localizacao': return <>
-        <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
-        <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
+        <td style={td()}><strong>{formatNumber(total.wpp)}</strong></td>
+        <td style={td()}><strong>{formatNumber(total.wppMeetTel)}</strong></td>
         <td style={td()}><strong>{total.pctContato.toFixed(1)}%</strong></td>
       </>;
       case 'baixas': return <>
