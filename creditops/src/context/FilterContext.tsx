@@ -1,19 +1,28 @@
 import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 
 export interface Filters {
-  dataInicial: string; dataFinal: string; carteira: string;
-  segmento: string; operador: string; fornecedor: string; produto: string;
+  carteira: string;
+  segmento: string;
+  operador: string;
+  produto: string;
 }
 
 interface FilterContextValue {
-  filters: Filters; setFilter: (key: keyof Filters, value: string) => void;
-  resetFilters: () => void; lastUpdated: Date; refresh: () => void; isLoading: boolean;
-  setIsLoading: (v: boolean) => void; setLastUpdated: (d: Date) => void;
+  filters: Filters;
+  setFilter: (key: keyof Filters, value: string) => void;
+  resetFilters: () => void;
+  lastUpdated: Date;
+  refresh: () => void;
+  isLoading: boolean;
+  setIsLoading: (v: boolean) => void;
+  setLastUpdated: (d: Date) => void;
 }
 
-const defaultFilters: Filters = {
-  dataInicial: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().slice(0, 10), dataFinal: new Date().toISOString().slice(0, 10),
-  carteira: 'all', segmento: 'all', operador: 'all', fornecedor: 'all', produto: 'all',
+export const defaultFilters: Filters = {
+  carteira: 'all',
+  segmento: 'all',
+  operador: 'all',
+  produto: 'all',
 };
 
 const FilterContext = createContext<FilterContextValue | null>(null);

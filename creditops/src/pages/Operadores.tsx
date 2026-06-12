@@ -3,6 +3,7 @@ import { Users, Trophy, TrendingUp, DollarSign, RefreshCw, AlertCircle } from 'l
 import { ChartCard } from '../components/charts/Charts';
 import { KPICard } from '../components/shared/KPICard';
 import { useSheetData } from '../hooks/useSheetData';
+import { useFilters } from '../context/FilterContext';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
@@ -140,10 +141,14 @@ function Metric({ label, value, color, bold }: { label: string; value: string; c
 
 export default function Operadores() {
   const { data, loading, error, refresh } = useSheetData();
+  const { filters } = useFilters();
 
   // Agrega por executivo (soma carteiras)
   const executivos = useMemo(() => {
     if (!data?.executivoRows) return [];
+    let rows = data.executivoRows;
+    if (filters.operador !== 'all') rows = rows.filter(r => r.email === filters.operador);
+    if (filters.carteira !== 'all') rows = rows.filter(r => r.carteira === filters.carteira);
     const map = new Map<string, {
       nome: string; email: string; equipe: string;
       assignado: number; completo: number; parcial: number; depositoTotal: number;
@@ -152,7 +157,7 @@ export default function Operadores() {
       montoBaixas: number; pctBaixas: number;
       carteiras: string[];
     }>();
-    for (const r of data.executivoRows) {
+    for (const r of rows) {
       const nome = shortName(r.email);
       const ex = map.get(r.executivo);
       if (ex) {

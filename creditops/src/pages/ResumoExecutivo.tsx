@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../lib/shadcn/tabs';
 import { KPICard } from '../components/shared/KPICard';
 import { ChartCard } from '../components/charts/Charts';
 import { useSheetData, ExecRow, ExecTotal } from '../hooks/useSheetData';
+import { useFilters } from '../context/FilterContext';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList } from 'recharts';
 
@@ -160,8 +161,14 @@ function td(align: 'left'|'right' = 'right'): React.CSSProperties {
 export default function ResumoExecutivo() {
   // ── TODOS os hooks ANTES de qualquer early return ──────────────────────────
   const { data, loading, error, refresh } = useSheetData();
+  const { filters } = useFilters();
 
-  const executivoRows = useMemo(() => data?.executivoRows ?? [], [data]);
+  const executivoRows = useMemo(() => {
+    let rows = data?.executivoRows ?? [];
+    if (filters.operador !== 'all') rows = rows.filter(r => r.email === filters.operador);
+    if (filters.carteira !== 'all') rows = rows.filter(r => r.carteira === filters.carteira);
+    return rows;
+  }, [data, filters.operador, filters.carteira]);
   const equipe1Total  = data?.equipe1Total;
   const equipe2Total  = data?.equipe2Total;
   const grandTotal    = data?.grandTotal;
