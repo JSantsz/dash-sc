@@ -4,7 +4,7 @@ import { useFilters, defaultFilters } from '../../context/FilterContext';
 import { useSheetData } from '../../hooks/useSheetData';
 import { formatDateTime } from '../../utils/formatters';
 
-const FILTER_PAGES = ['/', '/resumo-executivo', '/ligacoes'];
+const FILTER_PAGES = ['/resumo-executivo', '/ligacoes'];
 
 const SEGMENTOS = ['Todos','Novatos','2dos','Sin Segundos','3ros','4tos','5tos','Regular','2xC','Estruturado','Atenção','Rec >35<60','Rec >60<90','Rec >90','Crédito'];
 
