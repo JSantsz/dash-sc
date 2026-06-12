@@ -177,7 +177,7 @@ export default function ProdutividadePage() {
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false}/>
                     <XAxis dataKey="name" tick={{ fill:'#e8e4f0', fontSize:11, fontWeight:600 }} tickLine={false} axisLine={false}/>
                     <YAxis tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
-                    <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatCurrency(Number(v),true),'']}/>
+                    <Tooltip contentStyle={TT} labelStyle={{ color:'#e8e4f0', fontWeight:700 }} itemStyle={{ color:'#c4bedd' }} formatter={(v:unknown)=>[formatCurrency(Number(v),true),'']}/>
                     <Bar dataKey="value" radius={[4,4,0,0]}>
                       {funnelData.map((d,i)=><Cell key={i} fill={d.fill}/>)}
                     </Bar>
