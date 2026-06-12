@@ -169,9 +169,32 @@ export default function ResumoExecutivo() {
     if (filters.carteira !== 'all') rows = rows.filter(r => r.carteira === filters.carteira);
     return rows;
   }, [data, filters.operador, filters.carteira]);
-  const equipe1Total  = data?.equipe1Total;
-  const equipe2Total  = data?.equipe2Total;
-  const grandTotal    = data?.grandTotal;
+
+  // Recalcula totais a partir das linhas filtradas
+  const calcTotal = (rows: typeof executivoRows, nome: string) => {
+    const t = rows.reduce((acc, r) => ({
+      assignado: acc.assignado + r.assignado,
+      completo: acc.completo + r.completo,
+      parcial: acc.parcial + r.parcial,
+      depositoTotal: acc.depositoTotal + r.depositoTotal,
+      wpp: acc.wpp + r.wpp,
+      wppMeetTel: acc.wppMeetTel + r.wppMeetTel,
+      montoBaixas: acc.montoBaixas + r.montoBaixas,
+    }), { assignado:0, completo:0, parcial:0, depositoTotal:0, wpp:0, wppMeetTel:0, montoBaixas:0 });
+    return {
+      nome,
+      ...t,
+      pctCompleto: t.assignado > 0 ? (t.completo / t.assignado) * 100 : 0,
+      pctContato: 0,
+      pctBaixas: t.assignado > 0 ? (t.montoBaixas / t.assignado) * 100 : 0,
+    };
+  };
+
+  const antonioRows = executivoRows.filter(r => r.equipe === 'Antonio');
+  const anaRows     = executivoRows.filter(r => r.equipe === 'Ana');
+  const equipe1Total = calcTotal(antonioRows, 'Total Equipe Antonio');
+  const equipe2Total = calcTotal(anaRows,     'Total Equipe Ana');
+  const grandTotal   = calcTotal(executivoRows, 'Total Geral');
 
   const avgAting = useMemo(() =>
     executivoRows.length > 0

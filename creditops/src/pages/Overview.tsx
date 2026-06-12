@@ -3,6 +3,7 @@ import { DollarSign, Users, MapPin, FileText, CheckCircle, TrendingUp, BarChart2
 import { KPICard, KPIStatus } from '../components/shared/KPICard';
 import { FunnelOperacional, EvolucaoDiaria, RecuperacaoPorCarteira, ChartCard } from '../components/charts/Charts';
 import { useSheetData } from '../hooks/useSheetData';
+import { useFilters } from '../context/FilterContext';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
@@ -26,12 +27,16 @@ function shortName(email: string) {
 
 export default function Overview() {
   const { data, loading, error, lastUpdated, refresh } = useSheetData();
+  const { filters } = useFilters();
 
   // Ranking de operadores com dados reais
   const rankingOperadores = useMemo(() => {
     if (!data?.executivoRows) return [];
+    let rows = data.executivoRows;
+    if (filters.operador !== 'all') rows = rows.filter(r => r.email === filters.operador);
+    if (filters.carteira !== 'all') rows = rows.filter(r => r.carteira === filters.carteira);
     const map = new Map<string, { nome: string; deposito: number; atingimento: number; }>();
-    for (const r of data.executivoRows) {
+    for (const r of rows) {
       const nome = shortName(r.email);
       const ex = map.get(r.executivo);
       if (ex) {
@@ -44,7 +49,7 @@ export default function Overview() {
     return Array.from(map.values())
       .sort((a, b) => b.deposito - a.deposito)
       .slice(0, 8);
-  }, [data]);
+  }, [data, filters.operador, filters.carteira]);
 
   if (loading) return (
     <div className="dash-loading" style={{ flexDirection:'column', gap:12 }}>

@@ -1,5 +1,5 @@
-import { RefreshCw, Clock } from 'lucide-react';
-import { useFilters } from '../../context/FilterContext';
+import { RefreshCw, Clock, Filter } from 'lucide-react';
+import { useFilters, defaultFilters } from '../../context/FilterContext';
 import { useSheetData } from '../../hooks/useSheetData';
 import { formatDateTime } from '../../utils/formatters';
 
@@ -26,7 +26,9 @@ function FilterSelect({ label, value, options, onChange }: {
 }
 
 export function Header() {
-  const { filters, setFilter, refresh, lastUpdated, isLoading } = useFilters();
+  const { filters, setFilter, resetFilters, refresh, lastUpdated, isLoading } = useFilters();
+
+  const activeCount = Object.entries(filters).filter(([, v]) => v !== 'all').length;
   const { data } = useSheetData();
 
   // Carteiras reais dos dados
@@ -55,6 +57,11 @@ export function Header() {
         <FilterSelect label="Segmento" value={filters.segmento} options={segmentoOptions} onChange={v => setFilter('segmento', v)} />
         <FilterSelect label="Operador" value={filters.operador} options={operadorOptions} onChange={v => setFilter('operador', v)} />
         <FilterSelect label="Produto"  value={filters.produto}  options={produtoOptions}  onChange={v => setFilter('produto', v)} />
+        {activeCount > 0 && (
+          <button onClick={resetFilters} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(94,202,218,0.12)', border:'1px solid #5ecada', color:'#5ecada', borderRadius:6, padding:'3px 10px', fontSize:'0.68rem', fontWeight:700, cursor:'pointer', marginTop:10 }}>
+            <Filter size={10}/> {activeCount} ativo{activeCount > 1 ? 's' : ''} · Limpar
+          </button>
+        )}
       </div>
       <div style={{ display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:4, fontSize:'0.68rem', color:'var(--d-text-dim)' }}>

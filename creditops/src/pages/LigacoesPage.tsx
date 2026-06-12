@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Phone, RefreshCw, AlertCircle, X, TrendingUp, Target, Zap, BarChart2 } from 'lucide-react';
+import { Phone, RefreshCw, AlertCircle, X } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
+import { useFilters } from '../context/FilterContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, Legend } from 'recharts';
 
 const HORAS = ['08h','09h','10h','11h','12h','13h','14h','15h','16h','17h','18h','19h','20h'];
@@ -219,6 +220,7 @@ function ProdutividadeModal({
 // ── Página principal ──────────────────────────────────────────────────────────
 export default function LigacoesPage() {
   const { data, loading, error, refresh } = useSheetData();
+  const { filters } = useFilters();
   const ligacoes = data?.ligacoes ?? [];
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
 
@@ -235,8 +237,10 @@ export default function LigacoesPage() {
 
   const agentes = useMemo(() => {
     const set = new Set(ligacoes.filter(r => r.data === dataFiltro).map(r => r.agent));
-    return Array.from(set).sort();
-  }, [ligacoes, dataFiltro]);
+    let list = Array.from(set).sort();
+    if (filters.operador !== 'all') list = list.filter(a => a === filters.operador);
+    return list;
+  }, [ligacoes, dataFiltro, filters.operador]);
 
   const lookup = useMemo(() => {
     const map: Record<string, { tentativas: number; efetivas: number }> = {};
