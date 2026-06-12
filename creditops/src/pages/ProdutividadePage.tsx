@@ -175,8 +175,8 @@ export default function ProdutividadePage() {
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={funnelData} margin={{ top:4, right:12, left:-10, bottom:0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false}/>
-                    <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
-                    <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
+                    <XAxis dataKey="name" tick={{ fill:'#e8e4f0', fontSize:11, fontWeight:600 }} tickLine={false} axisLine={false}/>
+                    <YAxis tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                     <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatCurrency(Number(v),true),'']}/>
                     <Bar dataKey="value" radius={[4,4,0,0]}>
                       {funnelData.map((d,i)=><Cell key={i} fill={d.fill}/>)}
@@ -195,8 +195,8 @@ export default function ProdutividadePage() {
                   <ResponsiveContainer width="100%" height={200}>
                     <BarChart data={carteiraData} margin={{ top:4, right:12, left:-10, bottom:40 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false}/>
-                      <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:9 }} tickLine={false} axisLine={false} angle={-25} textAnchor="end" height={50}/>
-                      <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
+                      <XAxis dataKey="name" tick={{ fill:'#c4bedd', fontSize:9 }} tickLine={false} axisLine={false} angle={-25} textAnchor="end" height={50}/>
+                      <YAxis tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                       <Tooltip contentStyle={TT} formatter={(v:unknown,n:unknown)=>[formatCurrency(Number(v),true),String(n)]}/>
                       <Legend wrapperStyle={{ fontSize:11, color:'#9991b8' }}/>
                       <Bar dataKey="completo" name="Completo" fill="#22c55e" radius={[2,2,0,0]}/>
@@ -277,8 +277,8 @@ export default function ProdutividadePage() {
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={ligHoras} margin={{ top:4, right:12, left:-20, bottom:0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false}/>
-                      <XAxis dataKey="hora" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
-                      <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
+                      <XAxis dataKey="hora" tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false}/>
+                      <YAxis tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false}/>
                       <Tooltip contentStyle={TT}/>
                       <Legend wrapperStyle={{ fontSize:11, color:'#9991b8' }}/>
                       <Line type="monotone" dataKey="tentativas" name="Tentativas" stroke="#8062de" strokeWidth={2} dot={{ fill:'#8062de', r:3 }}/>
