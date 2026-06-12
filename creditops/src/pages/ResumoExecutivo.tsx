@@ -29,7 +29,7 @@ function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:Ex
   const groupHeaders: Record<ColGroup, string[]> = {
     deposito:    ['Completo','Parcial','Dep. Total','% Completo'],
     pct:         ['Atingimento','Meta'],
-    localizacao: ['WPP','Wppinho + Meet + Tel','Total','% Contato'],
+    localizacao: ['WPP','Wppinho + Meet + Tel','Total'],
     baixas:      ['Monto','% Baixas','Meta'],
   };
 
@@ -48,8 +48,7 @@ function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:Ex
       case 'localizacao': return <>
         <td style={td()}>{row.wpp}</td>
         <td style={td()}>{row.wppMeetTel}</td>
-        <td style={td()}><strong>{row.wpp+row.wppMeetTel}</strong></td>
-        <td style={td()}>{row.pctContato.toFixed(1)}%</td>
+        <td style={td()}><strong>{row.pctContato.toFixed(1)}%</strong></td>
       </>;
       case 'baixas': return <>
         <td style={td()}><span style={{ color:'var(--d-danger)' }}>{formatCurrency(row.montoBaixas,true)}</span></td>
@@ -75,7 +74,6 @@ function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:Ex
         <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
         <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
         <td style={td()}><strong>{total.pctContato.toFixed(1)}%</strong></td>
-        <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
       </>;
       case 'baixas': return <>
         <td style={td()}><span style={{ color:'var(--d-danger)', fontWeight:700 }}>{formatCurrency(total.montoBaixas,true)}</span></td>
