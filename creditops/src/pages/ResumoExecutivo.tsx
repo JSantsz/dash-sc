@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import type React from 'react';
 import { Award, RefreshCw, AlertCircle } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '../lib/shadcn/tabs';
 import { KPICard } from '../components/shared/KPICard';
@@ -12,71 +13,150 @@ function shortName(email:string) { const p=email.split('@')[0]??email; return p.
 function statusColor(a:number) { return a>=100?'var(--d-success)':a>=70?'var(--d-warning)':'var(--d-danger)'; }
 function statusKpi(a:number): 'success'|'warning'|'danger' { return a>=100?'success':a>=70?'warning':'danger'; }
 
-function TotalRow({ total, label }:{ total:ExecTotal; label:string }) {
-  return (
-    <tr style={{ borderTop:'2px solid var(--d-border)', background:'var(--d-surface)' }}>
-      <td colSpan={3} style={{ padding:'0.45rem 0.6rem', fontWeight:700, color:'var(--d-accent-light)', whiteSpace:'nowrap', position:'sticky', left:0, background:'var(--d-surface)', zIndex:5 }}>{label}</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap' }}>{formatCurrency(total.assignado,true)}</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap', color:'var(--d-success)' }}>{formatCurrency(total.completo,true)}</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap', color:'var(--d-warning)' }}>{formatCurrency(total.parcial,true)}</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap' }}>{formatCurrency(total.depositoTotal,true)}</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap' }}>{total.pctCompleto.toFixed(1)}%</td>
-      <td colSpan={2} style={{ padding:'0.45rem 0.6rem', textAlign:'right', color:'var(--d-text-muted)' }}>—</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap' }}>{formatNumber(total.wpp)}</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap' }}>{formatNumber(total.wppMeetTel)}</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap' }}>{formatNumber(total.wpp+total.wppMeetTel)}</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap' }}>{total.pctContato.toFixed(1)}%</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap', color:'var(--d-danger)' }}>{formatCurrency(total.montoBaixas,true)}</td>
-      <td style={{ padding:'0.45rem 0.6rem', fontWeight:700, textAlign:'right', whiteSpace:'nowrap' }}>{total.pctBaixas.toFixed(1)}%</td>
-      <td style={{ padding:'0.45rem 0.6rem', textAlign:'right', color:'var(--d-text-muted)' }}>—</td>
-    </tr>
-  );
-}
+type ColGroup = 'deposito' | 'pct' | 'localizacao' | 'baixas';
+
+const COL_GROUPS: { key: ColGroup; label: string; color: string }[] = [
+  { key: 'deposito',    label: 'Depósito',    color: '#aa6cc9' },
+  { key: 'pct',         label: '% Depósito',  color: '#8062de' },
+  { key: 'localizacao', label: 'Localização', color: '#21ade0' },
+  { key: 'baixas',      label: 'Baixas',      color: '#ef4444' },
+];
 
 function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:ExecTotal; grand:ExecTotal }) {
+  const [group, setGroup] = useState<ColGroup>('deposito');
   const antonio = rows.filter(r=>r.equipe==='Antonio'), ana = rows.filter(r=>r.equipe==='Ana');
+
+  const groupHeaders: Record<ColGroup, string[]> = {
+    deposito:    ['Completo','Parcial','Dep. Total','% Completo'],
+    pct:         ['Atingimento','Meta'],
+    localizacao: ['WPP','WPP+Tel','Total','% Contato'],
+    baixas:      ['Monto','% Baixas','Meta'],
+  };
+
+  const renderGroupCells = (row: ExecRow) => {
+    switch(group) {
+      case 'deposito': return <>
+        <td style={td()}><span style={{ color:'var(--d-success)' }}>{formatCurrency(row.completo,true)}</span></td>
+        <td style={td()}><span style={{ color:row.parcial>0?'var(--d-warning)':'var(--d-text-muted)' }}>{formatCurrency(row.parcial,true)}</span></td>
+        <td style={td()}><strong>{formatCurrency(row.depositoTotal,true)}</strong></td>
+        <td style={td()}>{row.pctCompleto.toFixed(1)}%</td>
+      </>;
+      case 'pct': return <>
+        <td style={td()}><span style={{ fontWeight:700, color:statusColor(row.atingimento) }}>{row.atingimento.toFixed(1)}%</span></td>
+        <td style={td()}><span style={{ color:'var(--d-text-muted)' }}>{row.metaDeposito}%</span></td>
+      </>;
+      case 'localizacao': return <>
+        <td style={td()}>{row.wpp}</td>
+        <td style={td()}>{row.wppMeetTel}</td>
+        <td style={td()}><strong>{row.wpp+row.wppMeetTel}</strong></td>
+        <td style={td()}>{row.pctContato.toFixed(1)}%</td>
+      </>;
+      case 'baixas': return <>
+        <td style={td()}><span style={{ color:'var(--d-danger)' }}>{formatCurrency(row.montoBaixas,true)}</span></td>
+        <td style={td()}>{row.pctBaixas.toFixed(2)}%</td>
+        <td style={td()}><span style={{ color:'var(--d-text-muted)' }}>{row.metaBaixas > 0 ? `${row.metaBaixas}%` : '—'}</span></td>
+      </>;
+    }
+  };
+
+  const renderTotalCells = (total: ExecTotal) => {
+    switch(group) {
+      case 'deposito': return <>
+        <td style={td()}><span style={{ color:'var(--d-success)', fontWeight:700 }}>{formatCurrency(total.completo,true)}</span></td>
+        <td style={td()}><span style={{ color:'var(--d-warning)', fontWeight:700 }}>{formatCurrency(total.parcial,true)}</span></td>
+        <td style={td()}><strong>{formatCurrency(total.depositoTotal,true)}</strong></td>
+        <td style={td()}><strong>{total.pctCompleto.toFixed(1)}%</strong></td>
+      </>;
+      case 'pct': return <>
+        <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
+        <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
+      </>;
+      case 'localizacao': return <>
+        <td style={td()}><strong>{formatNumber(total.wpp)}</strong></td>
+        <td style={td()}><strong>{formatNumber(total.wppMeetTel)}</strong></td>
+        <td style={td()}><strong>{formatNumber(total.wpp+total.wppMeetTel)}</strong></td>
+        <td style={td()}><strong>{total.pctContato.toFixed(1)}%</strong></td>
+      </>;
+      case 'baixas': return <>
+        <td style={td()}><span style={{ color:'var(--d-danger)', fontWeight:700 }}>{formatCurrency(total.montoBaixas,true)}</span></td>
+        <td style={td()}><strong>{total.pctBaixas.toFixed(1)}%</strong></td>
+        <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
+      </>;
+    }
+  };
+
   const renderRow = (row:ExecRow, i:number) => (
-    <tr key={`${row.executivo}-${i}`} style={{ borderBottom:'1px solid rgba(58,45,85,0.4)' }}>
-      <td style={{ padding:'0.42rem 0.6rem', fontWeight:600, whiteSpace:'nowrap', position:'sticky', left:0, background:'var(--d-card)', zIndex:5, minWidth:120 }}>{shortName(row.executivo)}</td>
-      <td style={{ padding:'0.42rem 0.6rem', color:'var(--d-text-muted)', fontSize:'0.72rem', whiteSpace:'nowrap' }}>{row.email}</td>
-      <td style={{ padding:'0.42rem 0.6rem' }}><span style={{ background:'var(--d-accent-muted)', color:'var(--d-accent-light)', borderRadius:4, padding:'2px 7px', fontSize:'0.7rem' }}>{row.carteira}</span></td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap' }}>{formatCurrency(row.assignado,true)}</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap', color:'var(--d-success)' }}>{formatCurrency(row.completo,true)}</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap', color:row.parcial>0?'var(--d-warning)':'var(--d-text-muted)' }}>{formatCurrency(row.parcial,true)}</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap', fontWeight:600 }}>{formatCurrency(row.depositoTotal,true)}</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap' }}>{row.pctCompleto.toFixed(1)}%</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap', fontWeight:700, color:statusColor(row.atingimento) }}>{row.atingimento.toFixed(1)}%</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap', color:'var(--d-text-muted)' }}>{row.metaDeposito}%</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap' }}>{row.wpp}</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap' }}>{row.wppMeetTel}</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap', fontWeight:600 }}>{row.wpp+row.wppMeetTel}</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap' }}>{row.pctContato.toFixed(1)}%</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap', color:'var(--d-danger)' }}>{formatCurrency(row.montoBaixas,true)}</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap' }}>{row.pctBaixas.toFixed(2)}%</td>
-      <td style={{ padding:'0.42rem 0.6rem', textAlign:'right', whiteSpace:'nowrap', color:'var(--d-text-muted)' }}>{row.metaBaixas > 0 ? `${row.metaBaixas}%` : '—'}</td>
+    <tr key={`${row.executivo}-${i}`} style={{ borderBottom:'1px solid rgba(58,45,85,0.4)' }}
+      onMouseEnter={e=>(e.currentTarget.style.background='rgba(128,98,222,0.07)')}
+      onMouseLeave={e=>(e.currentTarget.style.background='')}>
+      <td style={{ ...td('left'), fontWeight:600, position:'sticky', left:0, background:'var(--d-card)', zIndex:5, minWidth:130 }}>{shortName(row.executivo)}</td>
+      <td style={{ ...td('left'), color:'var(--d-text-muted)', fontSize:'0.7rem', minWidth:180 }}>{row.email}</td>
+      <td style={{ ...td('left'), minWidth:140 }}><span style={{ background:'var(--d-accent-muted)', color:'var(--d-accent-light)', borderRadius:4, padding:'2px 7px', fontSize:'0.7rem' }}>{row.carteira}</span></td>
+      <td style={td()}>{formatCurrency(row.assignado,true)}</td>
+      {renderGroupCells(row)}
     </tr>
   );
-  const headers = ['Executivo','E-mail','Carteira','Assignado','Completo','Parcial','Dep. Total','% Completo','Atingimento','Meta','WPP','WPP+Tel','Total','% Contato','Monto','% Baixas','Meta'];
+
+  const TotalRowNew = ({ total, label }: { total:ExecTotal; label:string }) => (
+    <tr style={{ borderTop:'2px solid var(--d-border)', background:'var(--d-surface)' }}>
+      <td colSpan={3} style={{ padding:'0.45rem 0.75rem', fontWeight:700, color:'var(--d-accent-light)', position:'sticky', left:0, background:'var(--d-surface)', zIndex:5 }}>{label}</td>
+      <td style={td()}><strong>{formatCurrency(total.assignado,true)}</strong></td>
+      {renderTotalCells(total)}
+    </tr>
+  );
+
+  const activeColor = COL_GROUPS.find(g=>g.key===group)?.color ?? 'var(--d-accent)';
+
   return (
     <div className="dash-card" style={{ overflow:'hidden' }}>
+      {/* Botões de grupo */}
+      <div style={{ padding:'0.75rem 1rem', borderBottom:'1px solid var(--d-border)', display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+        <span style={{ fontSize:'0.72rem', color:'var(--d-text-dim)', fontWeight:600, marginRight:4 }}>Visualizar:</span>
+        {COL_GROUPS.map(g => (
+          <button key={g.key} onClick={()=>setGroup(g.key)} style={{
+            padding:'4px 14px', fontSize:'0.72rem', fontWeight:600, borderRadius:20,
+            cursor:'pointer', border:'1px solid', transition:'all 0.15s',
+            borderColor: group===g.key ? g.color : 'var(--d-border)',
+            background:  group===g.key ? g.color  : 'transparent',
+            color:       group===g.key ? '#fff'   : 'var(--d-text-dim)',
+          }}>{g.label}</button>
+        ))}
+      </div>
+
+      {/* Tabela */}
       <div className="op-table-wrapper" style={{ borderRadius:0, border:'none' }}>
         <table style={{ borderCollapse:'collapse', minWidth:'100%', fontSize:'0.78rem' }}>
           <thead>
-            <tr>{headers.map((h,i)=><th key={i} style={{ background:'var(--d-surface)', color:'var(--d-text-muted)', fontWeight:600, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.04em', padding:'0.45rem 0.6rem', textAlign:i<3?'left':'right', borderBottom:'1px solid var(--d-border)', whiteSpace:'nowrap', position:i===0?'sticky':undefined, left:i===0?0:undefined, zIndex:i===0?10:undefined }}>{h}</th>)}</tr>
+            <tr>
+              {['Executivo','E-mail','Carteira','Assignado'].map((h,i)=>(
+                <th key={h} style={{ background:'var(--d-surface)', color:'var(--d-text-muted)', fontWeight:600, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.04em', padding:'0.5rem 0.75rem', textAlign:i<3?'left':'right', borderBottom:`2px solid ${activeColor}`, whiteSpace:'nowrap', position:i===0?'sticky':undefined, left:i===0?0:undefined, zIndex:i===0?10:undefined }}>{h}</th>
+              ))}
+              {groupHeaders[group].map(h=>(
+                <th key={h} style={{ background:'var(--d-surface)', color:activeColor, fontWeight:700, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.04em', padding:'0.5rem 0.75rem', textAlign:'right', borderBottom:`2px solid ${activeColor}`, whiteSpace:'nowrap' }}>{h}</th>
+              ))}
+            </tr>
           </thead>
           <tbody>
-            <tr style={{ background:'var(--d-surface)' }}><td colSpan={17} style={{ padding:'0.3rem 0.8rem', fontWeight:700, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--d-purple-mid)' }}>Equipe Antonio</td></tr>
+            <tr style={{ background:'rgba(170,108,201,0.06)' }}>
+              <td colSpan={4+groupHeaders[group].length} style={{ padding:'0.3rem 0.75rem', fontWeight:700, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--d-purple-mid)' }}>Equipe Antonio</td>
+            </tr>
             {antonio.map(renderRow)}
-            <TotalRow total={t1} label="Total Equipe Antonio"/>
-            <tr style={{ background:'var(--d-surface)' }}><td colSpan={17} style={{ padding:'0.3rem 0.8rem', fontWeight:700, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--d-blue)' }}>Equipe Ana</td></tr>
+            <TotalRowNew total={t1} label="Total Equipe Antonio"/>
+            <tr style={{ background:'rgba(33,173,224,0.06)' }}>
+              <td colSpan={4+groupHeaders[group].length} style={{ padding:'0.3rem 0.75rem', fontWeight:700, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--d-blue)' }}>Equipe Ana</td>
+            </tr>
             {ana.map(renderRow)}
-            <TotalRow total={t2} label="Total Equipe Ana"/>
-            <TotalRow total={grand} label="Total Geral"/>
+            <TotalRowNew total={t2} label="Total Equipe Ana"/>
+            <TotalRowNew total={grand} label="Total Geral"/>
           </tbody>
         </table>
       </div>
     </div>
   );
+}
+
+function td(align: 'left'|'right' = 'right'): React.CSSProperties {
+  return { padding:'0.45rem 0.75rem', textAlign:align, whiteSpace:'nowrap' };
 }
 
 export default function ResumoExecutivo() {
