@@ -29,7 +29,7 @@ function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:Ex
   const groupHeaders: Record<ColGroup, string[]> = {
     deposito:    ['Completo','Parcial','Dep. Total','% Completo'],
     pct:         ['Atingimento','Meta'],
-    localizacao: ['WPP','WPP+Tel','Total','% Contato'],
+    localizacao: ['WPP','Wppinho + Meet + Tel','Total','% Contato'],
     baixas:      ['Monto','% Baixas','Meta'],
   };
 
@@ -72,8 +72,8 @@ function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:Ex
         <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
       </>;
       case 'localizacao': return <>
-        <td style={td()}><strong>{formatNumber(total.wpp)}</strong></td>
-        <td style={td()}><strong>{formatNumber(total.wppMeetTel)}</strong></td>
+        <td style={td()}><strong>{total.wpp > 0 ? ((total.wpp/(total.wpp+total.wppMeetTel))*100).toFixed(1)+'%' : '—'}</strong></td>
+        <td style={td()}><strong>{total.wppMeetTel > 0 ? ((total.wppMeetTel/(total.wpp+total.wppMeetTel))*100).toFixed(1)+'%' : '—'}</strong></td>
         <td style={td()}><strong>{formatNumber(total.wpp+total.wppMeetTel)}</strong></td>
         <td style={td()}><strong>{total.pctContato.toFixed(1)}%</strong></td>
       </>;
