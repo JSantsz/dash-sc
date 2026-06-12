@@ -89,13 +89,19 @@ export default function ResumoBaixas() {
       </div>
 
       {/* KPIs Dívida no topo */}
-      {totalD && (
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(175px, 1fr))', gap:10 }}>
-          <KPICard label="Total (R$)"      value={formatCurrency(totalD.assignado,true)}     status="neutral" icon={<DollarSign size={13}/>}/>
-          <KPICard label="% Baixas"        value={`${totalD.pctBaixas.toFixed(1)}%`}         status="warning" progress={totalD.pctBaixas} meta="10%" realizado={`${totalD.pctBaixas.toFixed(1)}%`}/>
-          <KPICard label="% Retido"        value={`${totalD.pctRetido.toFixed(1)}%`}         status="success" icon={<TrendingUp size={13}/>}/>
-        </div>
-      )}
+      {totalD && (() => {
+        const row2xC      = baixasPrimDivida.find(r => r.label === '2xC');
+        const solPct      = totalD.assignado > 0 ? (totalD.solicitados / totalD.assignado) * 100 : 0;
+        const sol2xCPct   = totalD.assignado > 0 && row2xC ? (row2xC.solicitados / totalD.assignado) * 100 : 0;
+        return (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(175px, 1fr))', gap:10 }}>
+            <KPICard label="Total (R$)"           value={formatCurrency(totalD.assignado,true)}            status="neutral"  icon={<DollarSign size={13}/>}/>
+            <KPICard label="% Baixas"             value={`${totalD.pctBaixas.toFixed(1)}%`}                status="warning"  progress={totalD.pctBaixas} meta="10%" realizado={`${totalD.pctBaixas.toFixed(1)}%`}/>
+            <KPICard label="Baixas Solicitadas"   value={formatCurrency(totalD.solicitados,true)}          subValue={`${solPct.toFixed(1)}% do total`}    status="warning" icon={<TrendingDown size={13}/>}/>
+            <KPICard label="Baixas 2xC"           value={row2xC ? formatCurrency(row2xC.solicitados,true) : '—'} subValue={`${sol2xCPct.toFixed(1)}% do total`} status="danger"  icon={<TrendingDown size={13}/>}/>
+          </div>
+        );
+      })()}
 
       <Tabs defaultValue="primaria">
         <TabsList className="tabs-list-override">
