@@ -67,28 +67,40 @@ export default function Overview() {
   );
 
   const kpi          = data!.kpis;
-  const totalValor   = kpi.carteiraTotalValor;
-  const totalClientes= kpi.carteiraTotalClientes;
-  const localizados  = kpi.clientesLocalizados;
-  const locPct       = kpi.clientesLocalizadosPct;
-  const depositos    = kpi.depositosCompletos;
-  const depPct       = kpi.depositosCompletosPct;
-  const valorRec     = kpi.valorRecuperado;
-  const ticketMedio  = depositos > 0 ? Math.round(valorRec / depositos) : 0;
-  const taxaConversao= totalClientes > 0 ? (depositos / totalClientes) * 100 : 0;
+
+  // Linhas filtradas para recalcular KPIs quando filtros estão ativos
+  const filteredRows = useMemo(() => {
+    let rows = data?.executivoRows ?? [];
+    if (filters.operador !== 'all') rows = rows.filter(r => r.email === filters.operador);
+    if (filters.carteira !== 'all') rows = rows.filter(r => r.carteira === filters.carteira);
+    return rows;
+  }, [data, filters.operador, filters.carteira]);
+
+  const isFiltered = filters.operador !== 'all' || filters.carteira !== 'all';
+
+  // KPIs calculados das linhas filtradas (quando filtros ativos) ou dados gerais
+  const totalValor    = isFiltered ? filteredRows.reduce((s, r) => s + r.assignado, 0)    : kpi.carteiraTotalValor;
+  const totalClientes = isFiltered ? filteredRows.length                                   : kpi.carteiraTotalClientes;
+  const localizados   = isFiltered ? filteredRows.reduce((s, r) => s + r.wpp + r.wppMeetTel, 0) : kpi.clientesLocalizados;
+  const locPct        = isFiltered ? (totalValor > 0 ? Math.round((localizados / filteredRows.length) * 100) : 0) : kpi.clientesLocalizadosPct;
+  const depositos     = isFiltered ? filteredRows.reduce((s, r) => s + r.completo, 0)     : kpi.valorRecuperado; // valor em R$
+  const depPct        = isFiltered ? (totalValor > 0 ? (depositos / totalValor) * 100 : 0) : kpi.depositosCompletosPct;
+  const valorRec      = isFiltered ? filteredRows.reduce((s, r) => s + r.depositoTotal, 0): kpi.valorRecuperado;
+  const promessas     = isFiltered ? filteredRows.reduce((s, r) => s + r.parcial, 0)      : kpi.promessasVigentes;
+  const ticketMedio   = filteredRows.length > 0 ? Math.round(valorRec / filteredRows.length) : (valorRec > 0 ? Math.round(valorRec / (kpi.depositosCompletos || 1)) : 0);
+  const taxaConversao = totalValor > 0 ? (valorRec / totalValor) * 100 : 0;
 
   const locStatus = locPct >= 80 ? 'success' : locPct >= 60 ? 'warning' : 'danger';
   const depStatus = depPct >= 25 ? 'success' : depPct >= 15 ? 'warning' : 'danger';
   const recStatus = valorRec >= 15000000 ? 'success' : valorRec >= 10000000 ? 'warning' : 'danger';
 
   const kpis = [
-    { label:'Carteira Total',         value:formatCurrency(totalValor,true),    subValue:`${formatNumber(totalClientes)} clientes`,      icon:<DollarSign size={14}/>, status:'neutral' as KPIStatus },
-    { label:'Clientes Trabalhados',   value:formatNumber(totalClientes),         subValue:'100% da carteira',                             icon:<Users size={14}/>,      status:'neutral' as KPIStatus },
-    { label:'Clientes Localizados',   value:formatNumber(localizados),           subValue:`${locPct}% de localização`,                    icon:<MapPin size={14}/>,     status:locStatus as KPIStatus, meta:'80%', realizado:`${locPct}%`, progress:(locPct/80)*100 },
-    { label:'Promessas Vigentes',     value:formatNumber(kpi.promessasVigentes), subValue:'Promessas ativas',                             icon:<FileText size={14}/>,   status:'neutral' as KPIStatus },
-    { label:'Depósitos Completos',    value:formatNumber(depositos),             subValue:`${depPct.toFixed(1)}% de conversão`,           icon:<CheckCircle size={14}/>, status:depStatus as KPIStatus, meta:'25%', realizado:`${depPct.toFixed(1)}%`, progress:(depPct/25)*100 },
-    { label:'Taxa de Conversão',      value:`${taxaConversao.toFixed(1)}%`,      subValue:'Depósitos / Carteira',                         icon:<TrendingUp size={14}/>, status:depStatus as KPIStatus },
-    { label:'Ticket Médio',           value:formatCurrency(ticketMedio,true),    subValue:'Por depósito completo',                        icon:<BarChart2 size={14}/>,  status:'neutral' as KPIStatus },
+    { label:'Carteira Total',         value:formatCurrency(totalValor,true),    subValue: isFiltered ? `${filteredRows.length} carteiras` : `${formatNumber(kpi.carteiraTotalClientes)} clientes`, icon:<DollarSign size={14}/>, status:'neutral' as KPIStatus },
+    { label:'Localizados',            value: isFiltered ? formatNumber(localizados) : formatNumber(kpi.clientesLocalizados), subValue:`${locPct}% de localização`, icon:<MapPin size={14}/>, status:locStatus as KPIStatus },
+    { label: isFiltered ? 'Dep. Completo (R$)' : 'Promessas Vigentes', value: isFiltered ? formatCurrency(promessas,true) : formatNumber(kpi.promessasVigentes), subValue: isFiltered ? 'Valor parcial' : 'Promessas ativas', icon:<FileText size={14}/>, status:'neutral' as KPIStatus },
+    { label: isFiltered ? 'Dep. Total (R$)' : 'Depósitos Completos', value: isFiltered ? formatCurrency(depositos,true) : formatNumber(kpi.depositosCompletos), subValue: isFiltered ? `${depPct.toFixed(1)}% do assignado` : `${depPct.toFixed(1)}% de conversão`, icon:<CheckCircle size={14}/>, status:depStatus as KPIStatus },
+    { label:'Taxa de Conversão',      value:`${taxaConversao.toFixed(1)}%`,      subValue:'Dep. Total / Carteira',                        icon:<TrendingUp size={14}/>, status:depStatus as KPIStatus },
+    { label:'Ticket Médio',           value:formatCurrency(ticketMedio,true),    subValue: isFiltered ? 'Por executivo' : 'Por depósito', icon:<BarChart2 size={14}/>,  status:'neutral' as KPIStatus },
     { label:'Recuperação Financeira', value:formatCurrency(valorRec,true),       subValue:'Depósitos completos',                          icon:<Target size={14}/>,     status:recStatus as KPIStatus, meta:formatCurrency(15000000,true), realizado:formatCurrency(valorRec,true), progress:(valorRec/15000000)*100 },
   ];
 
@@ -109,7 +121,7 @@ export default function Overview() {
       </div>
 
       <div style={{ display:'grid', gridTemplateColumns:'1fr 2fr', gap:12 }}>
-        <FunnelOperacional localizados={localizados} promessas={kpi.promessasVigentes} depositos={depositos} totalClientes={totalClientes}/>
+        <FunnelOperacional localizados={localizados} promessas={isFiltered ? promessas : kpi.promessasVigentes} depositos={isFiltered ? depositos : kpi.depositosCompletos} totalClientes={isFiltered ? filteredRows.length : totalClientes}/>
         <EvolucaoDiaria/>
       </div>
 
