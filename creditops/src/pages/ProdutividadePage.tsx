@@ -97,7 +97,7 @@ export default function ProdutividadePage() {
   // Funil
   const funnelData = [
     { name: 'Assignado',  value: totais?.assignado    ?? 0, fill: '#8062de' },
-    { name: 'Localizados',value: totais?.wpp + (totais?.wppMeetTel ?? 0) ?? 0, fill: '#aa97ef' },
+    { name: 'Localizados',value: (totais?.wpp ?? 0) + (totais?.wppMeetTel ?? 0), fill: '#aa97ef' },
     { name: 'Depósitos',  value: totais?.completo     ?? 0, fill: '#21ade0' },
     { name: 'Promessas',  value: totais?.parcial      ?? 0, fill: '#aa6cc9' },
   ];
