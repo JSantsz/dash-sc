@@ -15,7 +15,7 @@ function RankTooltip({ active, payload }: { active?: boolean; payload?: { value:
   return (
     <div style={{ background:'#201b36', border:'1px solid #3a2d55', borderRadius:6, padding:'8px 12px' }}>
       <div style={{ color:'#e8e4f0', fontWeight:600, fontSize:12, marginBottom:4 }}>{p.payload.nome}</div>
-      <div style={{ color:'#aa97ef', fontSize:12 }}>Dep. Total: <span style={{ color:'#e8e4f0', fontWeight:700 }}>{p.value.toLocaleString('pt-BR', { style:'currency', currency:'BRL', maximumFractionDigits:0 })}</span></div>
+      <div style={{ color:'#aa97ef', fontSize:12 }}>Atingimento: <span style={{ color:'#e8e4f0', fontWeight:700 }}>{Number(p.value).toFixed(1)}%</span></div>
     </div>
   );
 }
@@ -47,7 +47,7 @@ export default function Overview() {
       }
     }
     return Array.from(map.values())
-      .sort((a, b) => b.deposito - a.deposito)
+      .sort((a, b) => b.atingimento - a.atingimento)
       .slice(0, 8);
   }, [data, filters.operador, filters.carteira]);
 
@@ -114,7 +114,7 @@ export default function Overview() {
       </div>
 
       {/* Ranking de Operadores com dados reais — ocupa largura total */}
-      <ChartCard title="Ranking de Operadores" subtitle="Por depósito total recuperado" height={240}>
+      <ChartCard title="Ranking de Operadores" subtitle="Por atingimento de meta (%)" height={240}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={rankingOperadores} margin={{ top:4, right:12, left:-10, bottom:40 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.6)" vertical={false}/>
@@ -122,9 +122,9 @@ export default function Overview() {
               axisLine={{ stroke:'#3a2d55' }} angle={-25} textAnchor="end" height={55}
               tickFormatter={(v:string) => v.split(' ')[0] ?? v}/>
             <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}
-              tickFormatter={(v:unknown) => formatCurrency(Number(v),true)}/>
+              tickFormatter={(v:unknown) => `${Number(v).toFixed(0)}%`}/>
             <Tooltip content={<RankTooltip/>}/>
-            <Bar dataKey="deposito" name="Dep. Total" radius={[3,3,0,0]}>
+            <Bar dataKey="atingimento" name="Atingimento %" radius={[3,3,0,0]}>
               {rankingOperadores.map((_,i) => <Cell key={i} fill={i===0?'#aa97ef':'#8062de'} opacity={1-i*0.08}/>)}
             </Bar>
           </BarChart>
