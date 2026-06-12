@@ -70,8 +70,7 @@ export default function ProdutividadePage() {
 
   const atingMedio   = linhasOp.length > 0 ? (totais?.atingimento ?? 0) / linhasOp.length : 0;
   const pctCompleto  = totais && totais.assignado > 0 ? (totais.completo / totais.assignado) * 100 : 0;
-  const txConversao  = totais && (totais.wpp + totais.wppMeetTel) > 0
-    ? (totais.completo / (totais.wpp + totais.wppMeetTel)) * 100 : 0;
+  const txConversao  = pctCompleto; // % do assignado que virou depósito completo
 
   // Dados de ligações do operador — última data disponível
   const datasLig = useMemo(() => {
@@ -163,7 +162,7 @@ export default function ProdutividadePage() {
               <KPIBlock label="% Completo"       value={`${pctCompleto.toFixed(1)}%`}             color={pctCompleto>=25?'var(--d-success)':pctCompleto>=15?'var(--d-warning)':'var(--d-danger)'} />
               <KPIBlock label="Atingimento Médio" value={`${atingMedio.toFixed(1)}%`}             color={atingMedio>=100?'var(--d-success)':atingMedio>=70?'var(--d-warning)':'var(--d-danger)'} icon={<Target size={14}/>}/>
               <KPIBlock label="Localizados"      value={formatNumber(totais.wpp+totais.wppMeetTel)} icon={<Phone size={14}/>} />
-              <KPIBlock label="Tx. Conversão"    value={`${txConversao.toFixed(1)}%`}             color={txConversao>=5?'var(--d-success)':txConversao>=3?'var(--d-warning)':'var(--d-danger)'} sub="Depósitos / Localizados" />
+              <KPIBlock label="Tx. Conversão"    value={`${txConversao.toFixed(1)}%`}             color={txConversao>=25?'var(--d-success)':txConversao>=15?'var(--d-warning)':'var(--d-danger)'} sub="Completo / Assignado" />
             </div>
           </div>
 
