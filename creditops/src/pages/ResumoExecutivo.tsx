@@ -72,10 +72,10 @@ function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:Ex
         <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
       </>;
       case 'localizacao': return <>
-        <td style={td()}><strong>{total.wpp > 0 ? ((total.wpp/(total.wpp+total.wppMeetTel))*100).toFixed(1)+'%' : '—'}</strong></td>
-        <td style={td()}><strong>{total.wppMeetTel > 0 ? ((total.wppMeetTel/(total.wpp+total.wppMeetTel))*100).toFixed(1)+'%' : '—'}</strong></td>
-        <td style={td()}><strong>{formatNumber(total.wpp+total.wppMeetTel)}</strong></td>
+        <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
+        <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
         <td style={td()}><strong>{total.pctContato.toFixed(1)}%</strong></td>
+        <td style={td()}><strong style={{ color:'var(--d-text-muted)' }}>—</strong></td>
       </>;
       case 'baixas': return <>
         <td style={td()}><span style={{ color:'var(--d-danger)', fontWeight:700 }}>{formatCurrency(total.montoBaixas,true)}</span></td>
