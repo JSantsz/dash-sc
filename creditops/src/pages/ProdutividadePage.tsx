@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { User, RefreshCw, AlertCircle, TrendingUp, Phone, DollarSign, Target } from 'lucide-react';
 import { useSheetData } from '../hooks/useSheetData';
-import { useFilters } from '../context/FilterContext';
 import { formatCurrency, formatNumber } from '../utils/formatters';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LineChart, Line, Legend } from 'recharts';
 
@@ -36,7 +35,6 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 export default function ProdutividadePage() {
   const { data, loading, error, refresh } = useSheetData();
-  const { filters } = useFilters();
   const [selectedEmail, setSelectedEmail] = useState<string>('');
 
   const execRows = useMemo(() => data?.executivoRows ?? [], [data]);
@@ -49,8 +47,7 @@ export default function ProdutividadePage() {
     return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
   }, [execRows]);
 
-  // Se filtro global de operador estiver ativo, usa ele; senão usa seleção local
-  const emailFiltro = (filters.operador !== 'all' ? filters.operador : selectedEmail) || operadores[0]?.[0] || '';
+  const emailFiltro = selectedEmail || operadores[0]?.[0] || '';
   const nomeOp = shortName(emailFiltro);
 
   // Linhas do executivo selecionado (pode ter múltiplas carteiras)
