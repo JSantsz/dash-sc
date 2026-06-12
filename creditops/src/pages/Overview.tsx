@@ -29,7 +29,7 @@ export default function Overview() {
   const { data, loading, error, lastUpdated, refresh } = useSheetData();
   const { filters } = useFilters();
 
-  // Ranking de operadores com dados reais
+  // ── Todos os hooks ANTES dos early returns ──
   const rankingOperadores = useMemo(() => {
     if (!data?.executivoRows) return [];
     let rows = data.executivoRows;
@@ -51,6 +51,14 @@ export default function Overview() {
       .slice(0, 8);
   }, [data, filters.operador, filters.carteira]);
 
+  const filteredRows = useMemo(() => {
+    let rows = data?.executivoRows ?? [];
+    if (filters.operador !== 'all') rows = rows.filter(r => r.email === filters.operador);
+    if (filters.carteira !== 'all') rows = rows.filter(r => r.carteira === filters.carteira);
+    return rows;
+  }, [data, filters.operador, filters.carteira]);
+  // ───────────────────────────────────────────
+
   if (loading) return (
     <div className="dash-loading" style={{ flexDirection:'column', gap:12 }}>
       <RefreshCw size={24} style={{ animation:'spin 1s linear infinite', color:'var(--d-accent)' }}/>
@@ -66,15 +74,7 @@ export default function Overview() {
     </div>
   );
 
-  const kpi          = data!.kpis;
-
-  // Linhas filtradas para recalcular KPIs quando filtros estão ativos
-  const filteredRows = useMemo(() => {
-    let rows = data?.executivoRows ?? [];
-    if (filters.operador !== 'all') rows = rows.filter(r => r.email === filters.operador);
-    if (filters.carteira !== 'all') rows = rows.filter(r => r.carteira === filters.carteira);
-    return rows;
-  }, [data, filters.operador, filters.carteira]);
+  const kpi = data!.kpis;
 
   const isFiltered = filters.operador !== 'all' || filters.carteira !== 'all';
 
