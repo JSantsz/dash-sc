@@ -170,32 +170,6 @@ export default function ResumoExecutivo() {
     return rows;
   }, [data, filters.operador, filters.carteira]);
 
-  // Recalcula totais a partir das linhas filtradas
-  const calcTotal = (rows: typeof executivoRows, nome: string) => {
-    const t = rows.reduce((acc, r) => ({
-      assignado: acc.assignado + r.assignado,
-      completo: acc.completo + r.completo,
-      parcial: acc.parcial + r.parcial,
-      depositoTotal: acc.depositoTotal + r.depositoTotal,
-      wpp: acc.wpp + r.wpp,
-      wppMeetTel: acc.wppMeetTel + r.wppMeetTel,
-      montoBaixas: acc.montoBaixas + r.montoBaixas,
-    }), { assignado:0, completo:0, parcial:0, depositoTotal:0, wpp:0, wppMeetTel:0, montoBaixas:0 });
-    return {
-      nome,
-      ...t,
-      pctCompleto: t.assignado > 0 ? (t.completo / t.assignado) * 100 : 0,
-      pctContato: 0,
-      pctBaixas: t.assignado > 0 ? (t.montoBaixas / t.assignado) * 100 : 0,
-    };
-  };
-
-  const antonioRows = executivoRows.filter(r => r.equipe === 'Antonio');
-  const anaRows     = executivoRows.filter(r => r.equipe === 'Ana');
-  const equipe1Total = calcTotal(antonioRows, 'Total Equipe Antonio');
-  const equipe2Total = calcTotal(anaRows,     'Total Equipe Ana');
-  const grandTotal   = calcTotal(executivoRows, 'Total Geral');
-
   const avgAting = useMemo(() =>
     executivoRows.length > 0
       ? executivoRows.reduce((s,r) => s+r.atingimento, 0) / executivoRows.length
@@ -233,6 +207,32 @@ export default function ResumoExecutivo() {
       <button onClick={refresh} style={{ background:'var(--d-accent-muted)', border:'1px solid var(--d-accent)', color:'var(--d-accent-light)', borderRadius:6, padding:'0.3rem 0.8rem', cursor:'pointer', fontSize:'0.78rem' }}>Tentar novamente</button>
     </div>
   );
+
+  // Totais calculados DEPOIS dos early returns (não são hooks)
+  const calcTotal = (rows: typeof executivoRows, nome: string) => {
+    const t = rows.reduce((acc, r) => ({
+      assignado: acc.assignado + r.assignado,
+      completo: acc.completo + r.completo,
+      parcial: acc.parcial + r.parcial,
+      depositoTotal: acc.depositoTotal + r.depositoTotal,
+      wpp: acc.wpp + r.wpp,
+      wppMeetTel: acc.wppMeetTel + r.wppMeetTel,
+      montoBaixas: acc.montoBaixas + r.montoBaixas,
+    }), { assignado:0, completo:0, parcial:0, depositoTotal:0, wpp:0, wppMeetTel:0, montoBaixas:0 });
+    return {
+      nome,
+      ...t,
+      pctCompleto: t.assignado > 0 ? (t.completo / t.assignado) * 100 : 0,
+      pctContato: 0,
+      pctBaixas: t.assignado > 0 ? (t.montoBaixas / t.assignado) * 100 : 0,
+    };
+  };
+
+  const antonioRows  = executivoRows.filter(r => r.equipe === 'Antonio');
+  const anaRows      = executivoRows.filter(r => r.equipe === 'Ana');
+  const equipe1Total = calcTotal(antonioRows,     'Total Equipe Antonio');
+  const equipe2Total = calcTotal(anaRows,         'Total Equipe Ana');
+  const grandTotal   = calcTotal(executivoRows,   'Total Geral');
 
   const gt = grandTotal!;
 
