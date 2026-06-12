@@ -176,58 +176,93 @@ export default function ResumoBaixas() {
         {/* ── Indicadores ── */}
         <TabsContent value="indicadores" style={{ marginTop:12 }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
-            <ChartCard title="% Baixas por Segmento (Clientes)" subtitle="Excl. 2xC" height={320}>
+
+            <ChartCard title="Baixas Solicitadas por Segmento" subtitle="Total de solicitados — Carteira Primária" height={320}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={semTotal.map(r=>({ name:r.label, value:r.solicitados }))} layout="vertical" margin={{ top:0, right:60, left:0, bottom:0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
+                  <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
+                  <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
+                  <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatNumber(Number(v)),'Solicitados']}/>
+                  <Bar dataKey="value" fill="#8062de" radius={[0,3,3,0]}>
+                    {semTotal.map((_:unknown,i:number)=><Cell key={i} fill="#8062de" opacity={1-i*0.05}/>)}
+                    <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }}/>
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <ChartCard title="Baixas por Carteira" subtitle="Confirmado — Primária vs Secundária" height={320}>
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={(() => {
+                    const labels = [...new Set(baixasPrimClientes.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC").map((r:BaixasRow)=>r.label))];
+                    return labels.map((l:string) => ({
+                      name: l,
+                      primaria:   baixasPrimClientes.find((r:BaixasRow)=>r.label===l)?.confirmado ?? 0,
+                      secundaria: baixasSecClientes.find((r:BaixasRow)=>r.label===l)?.confirmado  ?? 0,
+                    }));
+                  })()}
+                  margin={{ top:4, right:12, left:-10, bottom:40 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false}/>
+                  <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:9 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-35} textAnchor="end" height={50}/>
+                  <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
+                  <Tooltip contentStyle={TT}/>
+                  <Bar dataKey="primaria"   name="Primária"   fill="#8062de" radius={[2,2,0,0]}/>
+                  <Bar dataKey="secundaria" name="Secundária" fill="#21ade0" radius={[2,2,0,0]}/>
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartCard>
+
+            <ChartCard title="% Baixas por Segmento" subtitle="Excl. 2xC — Carteira Primária" height={320}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={pctBaixasChart} layout="vertical" margin={{ top:0, right:50, left:0, bottom:0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
                   <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>`${Number(v)}%`}/>
                   <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
-                  <Tooltip contentStyle={TT} formatter={(v:unknown)=>[`${Number(v).toFixed(1)}%`,'% Baixas']}/>
+                  <Tooltip contentStyle={TT} formatter={(v:unknown)=>[`${Number(v).toFixed(1)}%`,"% Baixas"]}/>
                   <Bar dataKey="value" radius={[0,3,3,0]}>
-                    {pctBaixasChart.map((e,i)=><Cell key={i} fill={e.value>=7?'#ef4444':e.value>=5?'#eab308':'#22c55e'}/>)}
+                    {pctBaixasChart.map((e:{value:number},i:number)=><Cell key={i} fill={e.value>=7?"#ef4444":e.value>=5?"#eab308":"#22c55e"}/>)}
                     <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>`${Number(v).toFixed(1)}%`}/>
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
-            <ChartCard title="% Retido por Segmento" subtitle="Maior = melhor retenção" height={320}>
+
+            <ChartCard title="Dívida de Baixa por Segmento" subtitle="Baixa Prevista (R$) — Carteira Primária" height={320}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={pctRetidoChart} layout="vertical" margin={{ top:0, right:50, left:0, bottom:0 }}>
+                <BarChart data={baixasPrimDivida.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC").map((r:BaixasRow)=>({ name:r.label, value:r.baixaPrevista }))} layout="vertical" margin={{ top:0, right:80, left:0, bottom:0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
-                  <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>`${Number(v)}%`} domain={[80,100]}/>
+                  <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>`${(Number(v)/1e6).toFixed(1)}M`}/>
                   <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
-                  <Tooltip contentStyle={TT} formatter={(v:unknown)=>[`${Number(v).toFixed(1)}%`,'% Retido']}/>
-                  <Bar dataKey="value" radius={[0,3,3,0]}>
-                    {pctRetidoChart.map((e,i)=><Cell key={i} fill={e.value>=95?'#22c55e':e.value>=90?'#eab308':'#ef4444'}/>)}
-                    <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>`${Number(v).toFixed(1)}%`}/>
+                  <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatCurrency(Number(v),true),"Baixa Prevista"]}/>
+                  <Bar dataKey="value" fill="#aa6cc9" radius={[0,3,3,0]}>
+                    {baixasPrimDivida.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC").map((_:unknown,i:number)=><Cell key={i} fill="#aa6cc9" opacity={1-i*0.05}/>)}
+                    <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
-            <ChartCard title="Confirmado × Retido por Segmento" subtitle="Clientes — Carteira Primária" height={280}>
+
+            <ChartCard title="Dívida por Baixa" subtitle="Razão Assignado ÷ Confirmado por segmento" height={320}>
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={confRetChart} margin={{ top:4, right:12, left:-10, bottom:40 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false}/>
-                  <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:9 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-35} textAnchor="end" height={50}/>
-                  <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
-                  <Tooltip contentStyle={TT}/>
-                  <Bar dataKey="conf" name="Confirmado" fill="#22c55e" radius={[2,2,0,0]}/>
-                  <Bar dataKey="ret"  name="Retido"     fill="#ef4444" radius={[2,2,0,0]}/>
+                <BarChart
+                  data={baixasPrimDivida.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC"&&r.confirmado>0).map((r:BaixasRow)=>({ name:r.label, value:r.assignado/r.confirmado }))}
+                  layout="vertical" margin={{ top:0, right:80, left:0, bottom:0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
+                  <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
+                  <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
+                  <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatCurrency(Number(v),true),"Dívida / Baixa"]}/>
+                  <Bar dataKey="value" fill="#21ade0" radius={[0,3,3,0]}>
+                    {baixasPrimDivida.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC"&&r.confirmado>0).map((_:unknown,i:number)=><Cell key={i} fill="#21ade0" opacity={1-i*0.05}/>)}
+                    <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
-            <ChartCard title="Dívida Confirmada × Retida" subtitle="Carteira Primária (R$)" height={280}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={dividaChart} margin={{ top:4, right:12, left:-10, bottom:40 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false}/>
-                  <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:9 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-35} textAnchor="end" height={50}/>
-                  <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>`${(Number(v)/1e6).toFixed(1)}M`}/>
-                  <Tooltip contentStyle={TT} formatter={(v:unknown,n:unknown)=>[formatCurrency(Number(v),true),String(n)]}/>
-                  <Bar dataKey="confirmado" name="Confirmado" fill="#8062de" radius={[2,2,0,0]}/>
-                  <Bar dataKey="retido"     name="Retido"     fill="#ef4444" radius={[2,2,0,0]} opacity={0.75}/>
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
+
           </div>
         </TabsContent>
 
