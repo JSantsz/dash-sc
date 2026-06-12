@@ -28,11 +28,13 @@ export function Sidebar() {
   return (
     <nav className="dash-sidebar">
       <div style={{ padding:'1rem 1rem 0.75rem', borderBottom:'1px solid var(--d-border)', display:'flex', alignItems:'center', gap:10 }}>
-        <div style={{ width:32, height:32, borderRadius:8, background:'linear-gradient(135deg,#8062de,#21ade0)', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>
-          <LayoutDashboard size={16} color="#fff"/>
-        </div>
+        <img
+          src="/bravo-logo.png"
+          alt="Bravo"
+          style={{ width:36, height:36, objectFit:'contain', flexShrink:0 }}
+        />
         <div>
-          <div style={{ fontSize:'0.82rem', fontWeight:700, color:'var(--d-text)' }}>Gerencial</div>
+          <div style={{ fontSize:'0.82rem', fontWeight:700, color:'var(--d-text)', fontFamily:"'Montserrat', sans-serif" }}>Gerencial</div>
           <div style={{ fontSize:'0.65rem', color:'var(--d-text-dim)' }}>Serviço ao Cliente</div>
         </div>
       </div>
