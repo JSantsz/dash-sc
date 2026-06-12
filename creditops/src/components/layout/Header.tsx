@@ -7,7 +7,6 @@ import { formatDateTime } from '../../utils/formatters';
 const FILTER_PAGES = ['/', '/resumo-executivo', '/ligacoes'];
 
 const SEGMENTOS = ['Todos','Novatos','2dos','Sin Segundos','3ros','4tos','5tos','Regular','2xC','Estruturado','Atenção','Rec >35<60','Rec >60<90','Rec >90','Crédito'];
-const PRODUTOS   = ['Todos','Cartão','Empréstimo','Financiamento','Crédito Pessoal'];
 
 function shortName(email: string) {
   return email.split('@')[0].replace('.', ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -52,7 +51,6 @@ export function Header() {
   ];
 
   const segmentoOptions = SEGMENTOS.map(s => ({ label: s, value: s === 'Todos' ? 'all' : s }));
-  const produtoOptions  = PRODUTOS.map(p  => ({ label: p, value: p === 'Todos' ? 'all' : p }));
 
   return (
     <header className="dash-header">
@@ -61,7 +59,6 @@ export function Header() {
           <FilterSelect label="Carteira" value={filters.carteira} options={carteiraOptions} onChange={v => setFilter('carteira', v)} />
           <FilterSelect label="Segmento" value={filters.segmento} options={segmentoOptions} onChange={v => setFilter('segmento', v)} />
           <FilterSelect label="Operador" value={filters.operador} options={operadorOptions} onChange={v => setFilter('operador', v)} />
-          <FilterSelect label="Produto"  value={filters.produto}  options={produtoOptions}  onChange={v => setFilter('produto', v)} />
           {activeCount > 0 && (
             <button onClick={resetFilters} style={{ display:'flex', alignItems:'center', gap:4, background:'rgba(94,202,218,0.12)', border:'1px solid #5ecada', color:'#5ecada', borderRadius:6, padding:'3px 10px', fontSize:'0.68rem', fontWeight:700, cursor:'pointer', marginTop:10 }}>
               <Filter size={10}/> {activeCount} ativo{activeCount > 1 ? 's' : ''} · Limpar

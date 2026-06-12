@@ -4,7 +4,6 @@ export interface Filters {
   carteira: string;
   segmento: string;
   operador: string;
-  produto: string;
 }
 
 interface FilterContextValue {
@@ -22,7 +21,6 @@ export const defaultFilters: Filters = {
   carteira: 'all',
   segmento: 'all',
   operador: 'all',
-  produto: 'all',
 };
 
 const FilterContext = createContext<FilterContextValue | null>(null);
