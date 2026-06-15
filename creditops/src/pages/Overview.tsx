@@ -85,7 +85,8 @@ export default function Overview() {
   const localizadosVal   = isFiltered ? filteredRows.reduce((s,r) => s+(r.assignado*(r.wpp+r.wppMeetTel)/Math.max(r.wpp+r.wppMeetTel,1)), 0) : totalValor * (kpi.clientesLocalizadosPct/100);
   const locPct           = isFiltered ? (totalClientes>0 ? Math.round((localizadosCli/totalClientes)*100) : 0) : kpi.clientesLocalizadosPct;
   const promessasCli     = isFiltered ? filteredRows.reduce((s,r) => s+r.parcial, 0)           : kpi.promessasVigentes;
-  const promessasVal     = isFiltered ? filteredRows.reduce((s,r) => s+r.parcial, 0)           : kpi.promessasVigentes;
+  const promessasVal     = isFiltered ? filteredRows.reduce((s,r) => s+r.parcial, 0)           : kpi.promessasDividaTotal;
+  const promSubValue     = 'Não pagará + Sem promessa + Vencida + Parcial + Completa + Vigente';
   const depositosCli     = isFiltered ? filteredRows.reduce((s,r) => s+r.completo, 0)          : kpi.depositosCompletos;
   const depositosVal     = isFiltered ? filteredRows.reduce((s,r) => s+r.depositoTotal, 0)     : kpi.valorRecuperado;
   const depPct           = totalValor>0 ? (depositosVal/totalValor)*100 : kpi.depositosCompletosPct;
@@ -130,7 +131,7 @@ export default function Overview() {
           <>
             <KPICard label="Carteira Total (R$)"    value={formatCurrency(totalValor,true)}     subValue={`${formatNumber(totalClientes)} clientes`}             icon={<DollarSign size={14}/>} status="neutral"/>
             <KPICard label="Localizados (R$)"       value={formatCurrency(localizadosVal,true)}  subValue={`${locPct}% de localização`}                           icon={<MapPin size={14}/>}     status={locStatus as KPIStatus}/>
-            <KPICard label="Promessas (R$)"         value={formatCurrency(promessasVal,true)}    subValue="Valor em promessas"                                    icon={<FileText size={14}/>}   status="neutral"/>
+            <KPICard label="Promessas (R$)"         value={formatCurrency(promessasVal,true)}    subValue={promSubValue}  icon={<FileText size={14}/>}   status="neutral"/>
             <KPICard label="Depósitos Completos (R$)" value={formatCurrency(depositosVal,true)} subValue={`${depPct.toFixed(1)}% do assignado`}                  icon={<CheckCircle size={14}/>} status={depStatus as KPIStatus}/>
             <KPICard label="Taxa de Conversão"      value={`${taxaConversao.toFixed(1)}%`}       subValue="Dep. Total / Carteira"                                  icon={<TrendingUp size={14}/>}  status={depStatus as KPIStatus}/>
             <KPICard label="Ticket Médio"           value={formatCurrency(ticketMedio,true)}     subValue="Por depósito completo"                                  icon={<BarChart2 size={14}/>}   status="neutral"/>
@@ -140,7 +141,7 @@ export default function Overview() {
           <>
             <KPICard label="Carteira Total (Cli.)"  value={formatNumber(totalClientes)}          subValue={formatCurrency(totalValor,true)}                        icon={<Users size={14}/>}      status="neutral"/>
             <KPICard label="Localizados"            value={formatNumber(localizadosCli)}          subValue={`${locPct}% de localização`}                           icon={<MapPin size={14}/>}     status={locStatus as KPIStatus} meta="80%" realizado={`${locPct}%`} progress={(locPct/80)*100}/>
-            <KPICard label="Promessas Vigentes"     value={formatNumber(promessasCli)}            subValue="Promessas ativas"                                      icon={<FileText size={14}/>}   status="neutral"/>
+            <KPICard label="Promessas (Clientes)"   value={formatNumber(promessasCli)}            subValue={promSubValue}  icon={<FileText size={14}/>}   status="neutral"/>
             <KPICard label="Depósitos Completos"    value={formatNumber(depositosCli)}            subValue={`${depPct.toFixed(1)}% de conversão`}                  icon={<CheckCircle size={14}/>} status={depStatus as KPIStatus} meta="25%" realizado={`${depPct.toFixed(1)}%`} progress={(depPct/25)*100}/>
             <KPICard label="Taxa de Conversão"      value={`${taxaConversao.toFixed(1)}%`}        subValue="Dep. Total / Carteira"                                  icon={<TrendingUp size={14}/>}  status={depStatus as KPIStatus}/>
             <KPICard label="Ticket Médio"           value={formatCurrency(ticketMedio,true)}      subValue="Por depósito completo"                                  icon={<BarChart2 size={14}/>}   status="neutral"/>
