@@ -249,51 +249,91 @@ export default function ProdutividadePage() {
 
           {/* ── Ligações ── */}
           <div>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8, flexWrap:'wrap', gap:8 }}>
-              <SectionTitle>Produtividade — Ligações</SectionTitle>
-              {datasLig.length > 0 && (
-                <div style={{ display:'flex', alignItems:'center', gap:8, background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:6, padding:'4px 10px' }}>
-                  <span style={{ fontSize:'0.68rem', color:'var(--d-text-dim)', textTransform:'uppercase', letterSpacing:'0.05em' }}>Data</span>
-                  <select value={dataLig} onChange={e => setDataLig(e.target.value)}
-                    style={{ background:'transparent', border:'none', outline:'none', color:'var(--d-text)', fontSize:'0.82rem', fontWeight:700, cursor:'pointer' }}>
-                    <option value="all" style={{ background:'#201b36' }}>Mês inteiro</option>
-                    {datasLig.map(d => <option key={d} value={d} style={{ background:'#201b36' }}>{d}</option>)}
-                  </select>
-                </div>
-              )}
-            </div>
+            <SectionTitle>Produtividade — Ligações</SectionTitle>
 
             {datasLig.length === 0 ? (
-              <div className="dash-card" style={{ padding:'1.5rem', textAlign:'center', color:'var(--d-text-dim)', fontSize:'0.82rem' }}>
+              <div className="dash-card" style={{ padding:'1.5rem', textAlign:'center', color:'var(--d-text-dim)', fontSize:'0.82rem', marginTop:8 }}>
                 Nenhum dado de ligação encontrado para {nomeOp}.
               </div>
             ) : (
               <>
-                {/* KPIs ligações */}
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(140px, 1fr))', gap:10, marginBottom:12 }}>
-                  <KPIBlock label="Tentativas"    value={String(totalTent)} color="var(--d-accent-light)" icon={<Phone size={14}/>}/>
-                  <KPIBlock label="Efetivas"      value={String(totalEfet)} color="var(--d-success)"/>
-                  <KPIBlock label="Taxa Conv."    value={`${txLig.toFixed(1)}%`} color={txLig>=50?'var(--d-success)':txLig>=30?'var(--d-warning)':'var(--d-danger)'}/>
-                  <KPIBlock label="Hora de Pico"  value={horaPico?.hora ?? '—'} sub={`${horaPico?.tentativas ?? 0} tent.`} color="var(--d-blue)"/>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(140px, 1fr))', gap:10, margin:'8px 0 12px' }}>
+                  <KPIBlock label="Tentativas"   value={String(totalTent)} color="var(--d-accent-light)" icon={<Phone size={14}/>}/>
+                  <KPIBlock label="Efetivas"     value={String(totalEfet)} color="var(--d-success)"/>
+                  <KPIBlock label="Taxa Conv."   value={`${txLig.toFixed(1)}%`} color={txLig>=50?'var(--d-success)':txLig>=30?'var(--d-warning)':'var(--d-danger)'}/>
+                  <KPIBlock label="Hora de Pico" value={horaPico?.hora ?? '---'} sub={`${horaPico?.tentativas ?? 0} tent.`} color="var(--d-blue)"/>
                 </div>
 
-                {/* Gráfico por hora */}
-                <div className="dash-card" style={{ padding:'0.75rem 1rem' }}>
-                  <div style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--d-text-dim)', marginBottom:10 }}>
-                    Tentativas e Efetivas por Hora — {dataLig === 'all' ? 'Mês inteiro' : dataLig}
-                  </div>
-                  <ResponsiveContainer width="100%" height={200}>
-                    <LineChart data={ligHoras} margin={{ top:4, right:12, left:-20, bottom:0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false}/>
-                      <XAxis dataKey="hora" tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false}/>
-                      <YAxis tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false}/>
-                      <Tooltip contentStyle={TT}/>
-                      <Legend wrapperStyle={{ fontSize:11, color:'#9991b8' }}/>
-                      <Line type="monotone" dataKey="tentativas" name="Tentativas" stroke="#8062de" strokeWidth={2} dot={{ fill:'#8062de', r:3 }}/>
-                      <Line type="monotone" dataKey="efetivas"   name="Efetivas"   stroke="#22c55e" strokeWidth={2} dot={{ fill:'#22c55e', r:3 }}/>
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                {(['tentativas','efetivas'] as const).map(tipo => {
+                  const accentColor = tipo === 'efetivas' ? 'var(--d-success)' : 'var(--d-accent)';
+                  const titulo = tipo === 'tentativas' ? 'Tentativas de Ligação' : 'Ligações Efetivas';
+                  return (
+                    <div key={tipo} className="dash-card" style={{ overflow:'hidden', marginBottom:12 }}>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0.6rem 1rem', borderBottom:'1px solid var(--d-border)' }}>
+                        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+                          <div style={{ width:3, height:16, borderRadius:2, background:accentColor }}/>
+                          <span style={{ fontSize:'0.75rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.06em', color:'var(--d-text)' }}>{titulo}</span>
+                        </div>
+                        <span style={{ fontSize:'0.7rem', color:accentColor, padding:'2px 10px', borderRadius:20, fontWeight:700, background:`color-mix(in srgb, ${accentColor} 12%, transparent)` }}>
+                          {ligacoes.filter(r => r.agent === emailFiltro).reduce((s, r) => s + r[tipo], 0)} total
+                        </span>
+                      </div>
+                      <div style={{ overflowX:'auto' }}>
+                        <table style={{ width:'100%', borderCollapse:'collapse', minWidth:900, fontSize:'0.75rem' }}>
+                          <thead>
+                            <tr style={{ background:'rgba(0,0,0,0.2)' }}>
+                              <th style={{ padding:'6px 12px', textAlign:'left', fontSize:'0.68rem', fontWeight:700, color:'var(--d-text-dim)', textTransform:'uppercase', borderBottom:'1px solid var(--d-border)', minWidth:110, whiteSpace:'nowrap' }}>Dia</th>
+                              {HORAS.map(h => (
+                                <th key={h} style={{ padding:'6px 8px', textAlign:'center', fontSize:'0.68rem', fontWeight:700, color:'var(--d-text-dim)', textTransform:'uppercase', borderBottom:'1px solid var(--d-border)', minWidth:44, whiteSpace:'nowrap' }}>{h}</th>
+                              ))}
+                              <th style={{ padding:'6px 10px', textAlign:'center', fontSize:'0.68rem', fontWeight:700, color:'var(--d-text)', textTransform:'uppercase', borderBottom:'1px solid var(--d-border)', minWidth:52, borderLeft:'1px solid var(--d-border)', whiteSpace:'nowrap' }}>Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {datasLig.map((dia, i) => {
+                              const total = HORAS.reduce((s, h) => {
+                                const row = ligacoes.find(r => r.agent === emailFiltro && r.data === dia && r.hora === h);
+                                return s + (row?.[tipo] ?? 0);
+                              }, 0);
+                              return (
+                                <tr key={dia} style={{ background:i%2===0?'transparent':'rgba(0,0,0,0.1)', transition:'background 0.15s' }}
+                                  onMouseEnter={e=>(e.currentTarget.style.background='rgba(128,98,222,0.07)')}
+                                  onMouseLeave={e=>(e.currentTarget.style.background=i%2===0?'transparent':'rgba(0,0,0,0.1)')}>
+                                  <td style={{ padding:'5px 12px', fontWeight:600, color:'var(--d-text-dim)', borderBottom:'1px solid rgba(58,45,85,0.3)', whiteSpace:'nowrap' }}>{dia}</td>
+                                  {HORAS.map(h => {
+                                    const row = ligacoes.find(r => r.agent === emailFiltro && r.data === dia && r.hora === h);
+                                    const val = row?.[tipo] ?? 0;
+                                    return (
+                                      <td key={h} style={{ padding:'5px 8px', textAlign:'center', borderBottom:'1px solid rgba(58,45,85,0.3)' }}>
+                                        {val > 0 ? <span style={{ color:accentColor, fontWeight:600 }}>{val}</span> : <span style={{ color:'var(--d-text-dim)', opacity:0.3 }}>--</span>}
+                                      </td>
+                                    );
+                                  })}
+                                  <td style={{ padding:'5px 10px', textAlign:'center', fontWeight:700, color:total>0?accentColor:'var(--d-text-dim)', borderBottom:'1px solid rgba(58,45,85,0.3)', borderLeft:'1px solid var(--d-border)' }}>
+                                    {total || '--'}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                            <tr style={{ background:'rgba(128,98,222,0.08)', borderTop:'2px solid var(--d-border)' }}>
+                              <td style={{ padding:'6px 12px', fontWeight:800, fontSize:'0.72rem', textTransform:'uppercase', color:'var(--d-text)' }}>Total</td>
+                              {HORAS.map(h => {
+                                const val = datasLig.reduce((s, dia) => {
+                                  const row = ligacoes.find(r => r.agent === emailFiltro && r.data === dia && r.hora === h);
+                                  return s + (row?.[tipo] ?? 0);
+                                }, 0);
+                                return <td key={h} style={{ padding:'6px 8px', textAlign:'center', fontWeight:700 }}>{val > 0 ? <span style={{ color:accentColor }}>{val}</span> : <span style={{ color:'var(--d-text-dim)', opacity:0.3 }}>--</span>}</td>;
+                              })}
+                              <td style={{ padding:'6px 10px', textAlign:'center', fontWeight:800, color:accentColor, borderLeft:'1px solid var(--d-border)' }}>
+                                {datasLig.reduce((s, dia) => s + HORAS.reduce((ss, h) => { const row = ligacoes.find(r => r.agent === emailFiltro && r.data === dia && r.hora === h); return ss + (row?.[tipo] ?? 0); }, 0), 0) || '--'}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  );
+                })}
               </>
             )}
           </div>

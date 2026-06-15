@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { DollarSign, Users, MapPin, FileText, CheckCircle, TrendingUp, BarChart2, Target, AlertCircle, RefreshCw } from 'lucide-react';
 import { KPICard, KPIStatus } from '../components/shared/KPICard';
 import { FunnelOperacional, EvolucaoDiaria, RecuperacaoPorCarteira, ChartCard } from '../components/charts/Charts';
@@ -28,6 +28,7 @@ function shortName(email: string) {
 export default function Overview() {
   const { data, loading, error, lastUpdated, refresh } = useSheetData();
   const { filters } = useFilters();
+  const [visao, setVisao] = useState<'divida'|'cliente'>('divida');
 
   // ── Todos os hooks ANTES dos early returns ──
   const rankingOperadores = useMemo(() => {
@@ -75,34 +76,25 @@ export default function Overview() {
   );
 
   const kpi = data!.kpis;
-
   const isFiltered = filters.operador !== 'all' || filters.carteira !== 'all';
 
-  // KPIs calculados das linhas filtradas (quando filtros ativos) ou dados gerais
-  const totalValor    = isFiltered ? filteredRows.reduce((s, r) => s + r.assignado, 0)    : kpi.carteiraTotalValor;
-  const totalClientes = isFiltered ? filteredRows.length                                   : kpi.carteiraTotalClientes;
-  const localizados   = isFiltered ? filteredRows.reduce((s, r) => s + r.wpp + r.wppMeetTel, 0) : kpi.clientesLocalizados;
-  const locPct        = isFiltered ? (totalValor > 0 ? Math.round((localizados / filteredRows.length) * 100) : 0) : kpi.clientesLocalizadosPct;
-  const depositos     = isFiltered ? filteredRows.reduce((s, r) => s + r.completo, 0)     : kpi.valorRecuperado; // valor em R$
-  const depPct        = isFiltered ? (totalValor > 0 ? (depositos / totalValor) * 100 : 0) : kpi.depositosCompletosPct;
-  const valorRec      = isFiltered ? filteredRows.reduce((s, r) => s + r.depositoTotal, 0): kpi.valorRecuperado;
-  const promessas     = isFiltered ? filteredRows.reduce((s, r) => s + r.parcial, 0)      : kpi.promessasVigentes;
-  const ticketMedio   = filteredRows.length > 0 ? Math.round(valorRec / filteredRows.length) : (valorRec > 0 ? Math.round(valorRec / (kpi.depositosCompletos || 1)) : 0);
-  const taxaConversao = totalValor > 0 ? (valorRec / totalValor) * 100 : 0;
+  // ── Valores base ──────────────────────────────────────────────────────────
+  const totalValor       = isFiltered ? filteredRows.reduce((s,r) => s+r.assignado, 0)         : kpi.carteiraTotalValor;
+  const totalClientes    = isFiltered ? filteredRows.length                                     : kpi.carteiraTotalClientes;
+  const localizadosCli   = isFiltered ? filteredRows.reduce((s,r) => s+r.wpp+r.wppMeetTel, 0) : kpi.clientesLocalizados;
+  const localizadosVal   = isFiltered ? filteredRows.reduce((s,r) => s+(r.assignado*(r.wpp+r.wppMeetTel)/Math.max(r.wpp+r.wppMeetTel,1)), 0) : totalValor * (kpi.clientesLocalizadosPct/100);
+  const locPct           = isFiltered ? (totalClientes>0 ? Math.round((localizadosCli/totalClientes)*100) : 0) : kpi.clientesLocalizadosPct;
+  const promessasCli     = isFiltered ? filteredRows.reduce((s,r) => s+r.parcial, 0)           : kpi.promessasVigentes;
+  const promessasVal     = isFiltered ? filteredRows.reduce((s,r) => s+r.parcial, 0)           : kpi.promessasVigentes;
+  const depositosCli     = isFiltered ? filteredRows.reduce((s,r) => s+r.completo, 0)          : kpi.depositosCompletos;
+  const depositosVal     = isFiltered ? filteredRows.reduce((s,r) => s+r.depositoTotal, 0)     : kpi.valorRecuperado;
+  const depPct           = totalValor>0 ? (depositosVal/totalValor)*100 : kpi.depositosCompletosPct;
+  const taxaConversao    = totalValor>0 ? (depositosVal/totalValor)*100 : 0;
+  const ticketMedio      = depositosCli>0 ? Math.round(depositosVal/depositosCli) : 0;
 
-  const locStatus = locPct >= 80 ? 'success' : locPct >= 60 ? 'warning' : 'danger';
-  const depStatus = depPct >= 25 ? 'success' : depPct >= 15 ? 'warning' : 'danger';
-  const recStatus = valorRec >= 15000000 ? 'success' : valorRec >= 10000000 ? 'warning' : 'danger';
-
-  const kpis = [
-    { label:'Carteira Total',         value:formatCurrency(totalValor,true),    subValue: isFiltered ? `${filteredRows.length} carteiras` : `${formatNumber(kpi.carteiraTotalClientes)} clientes`, icon:<DollarSign size={14}/>, status:'neutral' as KPIStatus },
-    { label:'Localizados',            value: isFiltered ? formatNumber(localizados) : formatNumber(kpi.clientesLocalizados), subValue:`${locPct}% de localização`, icon:<MapPin size={14}/>, status:locStatus as KPIStatus },
-    { label: isFiltered ? 'Dep. Completo (R$)' : 'Promessas Vigentes', value: isFiltered ? formatCurrency(promessas,true) : formatNumber(kpi.promessasVigentes), subValue: isFiltered ? 'Valor parcial' : 'Promessas ativas', icon:<FileText size={14}/>, status:'neutral' as KPIStatus },
-    { label: isFiltered ? 'Dep. Total (R$)' : 'Depósitos Completos', value: isFiltered ? formatCurrency(depositos,true) : formatNumber(kpi.depositosCompletos), subValue: isFiltered ? `${depPct.toFixed(1)}% do assignado` : `${depPct.toFixed(1)}% de conversão`, icon:<CheckCircle size={14}/>, status:depStatus as KPIStatus },
-    { label:'Taxa de Conversão',      value:`${taxaConversao.toFixed(1)}%`,      subValue:'Dep. Total / Carteira',                        icon:<TrendingUp size={14}/>, status:depStatus as KPIStatus },
-    { label:'Ticket Médio',           value:formatCurrency(ticketMedio,true),    subValue: isFiltered ? 'Por executivo' : 'Por depósito', icon:<BarChart2 size={14}/>,  status:'neutral' as KPIStatus },
-    { label:'Recuperação Financeira', value:formatCurrency(valorRec,true),       subValue:'Depósitos completos',                          icon:<Target size={14}/>,     status:recStatus as KPIStatus, meta:formatCurrency(15000000,true), realizado:formatCurrency(valorRec,true), progress:(valorRec/15000000)*100 },
-  ];
+  const locStatus = locPct>=80?'success':locPct>=60?'warning':'danger';
+  const depStatus = depPct>=25?'success':depPct>=15?'warning':'danger';
+  const recStatus = depositosVal>=15000000?'success':depositosVal>=10000000?'warning':'danger';
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
@@ -111,37 +103,57 @@ export default function Overview() {
           <h1 className="page-title">Visão Geral</h1>
           <p className="page-subtitle">Indicadores consolidados — atualizado em {lastUpdated.toLocaleTimeString('pt-BR')}</p>
         </div>
-        <button onClick={refresh} style={{ display:'flex', alignItems:'center', gap:5, background:'var(--d-accent-muted)', border:'1px solid var(--d-accent)', color:'var(--d-accent-light)', borderRadius:6, padding:'0.3rem 0.75rem', fontSize:'0.75rem', fontWeight:600, cursor:'pointer' }}>
-          <RefreshCw size={13}/> Atualizar
-        </button>
+        {/* Toggle Dívida / Cliente */}
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:'0.7rem', color:'var(--d-text-dim)', fontWeight:600 }}>Visão:</span>
+          <div style={{ display:'flex', background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:8, padding:3, gap:3 }}>
+            {(['divida','cliente'] as const).map(v => (
+              <button key={v} onClick={()=>setVisao(v)} style={{
+                padding:'4px 14px', fontSize:'0.72rem', fontWeight:700, borderRadius:6, cursor:'pointer', border:'none',
+                background: visao===v ? 'var(--d-accent)' : 'transparent',
+                color:      visao===v ? '#fff' : 'var(--d-text-dim)',
+                transition: 'all 0.15s',
+              }}>
+                {v === 'divida' ? 'Dívida' : 'Cliente'}
+              </button>
+            ))}
+          </div>
+          <button onClick={refresh} style={{ display:'flex', alignItems:'center', gap:5, background:'var(--d-accent-muted)', border:'1px solid var(--d-accent)', color:'var(--d-accent-light)', borderRadius:6, padding:'0.3rem 0.75rem', fontSize:'0.75rem', fontWeight:600, cursor:'pointer' }}>
+            <RefreshCw size={13}/> Atualizar
+          </button>
+        </div>
       </div>
 
+      {/* KPIs */}
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(220px, 1fr))', gap:12 }}>
-        {kpis.map((k,i) => <KPICard key={i} {...k}/>)}
+        {visao === 'divida' ? (
+          <>
+            <KPICard label="Carteira Total (R$)"    value={formatCurrency(totalValor,true)}     subValue={`${formatNumber(totalClientes)} clientes`}             icon={<DollarSign size={14}/>} status="neutral"/>
+            <KPICard label="Localizados (R$)"       value={formatCurrency(localizadosVal,true)}  subValue={`${locPct}% de localização`}                           icon={<MapPin size={14}/>}     status={locStatus as KPIStatus}/>
+            <KPICard label="Promessas (R$)"         value={formatCurrency(promessasVal,true)}    subValue="Valor em promessas"                                    icon={<FileText size={14}/>}   status="neutral"/>
+            <KPICard label="Depósitos Completos (R$)" value={formatCurrency(depositosVal,true)} subValue={`${depPct.toFixed(1)}% do assignado`}                  icon={<CheckCircle size={14}/>} status={depStatus as KPIStatus}/>
+            <KPICard label="Taxa de Conversão"      value={`${taxaConversao.toFixed(1)}%`}       subValue="Dep. Total / Carteira"                                  icon={<TrendingUp size={14}/>}  status={depStatus as KPIStatus}/>
+            <KPICard label="Ticket Médio"           value={formatCurrency(ticketMedio,true)}     subValue="Por depósito completo"                                  icon={<BarChart2 size={14}/>}   status="neutral"/>
+            <KPICard label="Recuperação Financeira" value={formatCurrency(depositosVal,true)}    subValue="Depósitos completos" icon={<Target size={14}/>} status={recStatus as KPIStatus} meta={formatCurrency(15000000,true)} realizado={formatCurrency(depositosVal,true)} progress={(depositosVal/15000000)*100}/>
+          </>
+        ) : (
+          <>
+            <KPICard label="Carteira Total (Cli.)"  value={formatNumber(totalClientes)}          subValue={formatCurrency(totalValor,true)}                        icon={<Users size={14}/>}      status="neutral"/>
+            <KPICard label="Localizados"            value={formatNumber(localizadosCli)}          subValue={`${locPct}% de localização`}                           icon={<MapPin size={14}/>}     status={locStatus as KPIStatus} meta="80%" realizado={`${locPct}%`} progress={(locPct/80)*100}/>
+            <KPICard label="Promessas Vigentes"     value={formatNumber(promessasCli)}            subValue="Promessas ativas"                                      icon={<FileText size={14}/>}   status="neutral"/>
+            <KPICard label="Depósitos Completos"    value={formatNumber(depositosCli)}            subValue={`${depPct.toFixed(1)}% de conversão`}                  icon={<CheckCircle size={14}/>} status={depStatus as KPIStatus} meta="25%" realizado={`${depPct.toFixed(1)}%`} progress={(depPct/25)*100}/>
+            <KPICard label="Taxa de Conversão"      value={`${taxaConversao.toFixed(1)}%`}        subValue="Dep. Total / Carteira"                                  icon={<TrendingUp size={14}/>}  status={depStatus as KPIStatus}/>
+            <KPICard label="Ticket Médio"           value={formatCurrency(ticketMedio,true)}      subValue="Por depósito completo"                                  icon={<BarChart2 size={14}/>}   status="neutral"/>
+            <KPICard label="Recuperação Financeira" value={formatCurrency(depositosVal,true)}     subValue="Depósitos completos" icon={<Target size={14}/>} status={recStatus as KPIStatus} meta={formatCurrency(15000000,true)} realizado={formatCurrency(depositosVal,true)} progress={(depositosVal/15000000)*100}/>
+          </>
+        )}
       </div>
 
       <div style={{ display:'grid', gridTemplateColumns:'1fr 2fr', gap:12 }}>
-        <FunnelOperacional localizados={localizados} promessas={isFiltered ? promessas : kpi.promessasVigentes} depositos={isFiltered ? depositos : kpi.depositosCompletos} totalClientes={isFiltered ? filteredRows.length : totalClientes}/>
+        <FunnelOperacional localizados={localizadosCli} promessas={visao==='divida' ? promessasVal : promessasCli} depositos={visao==='divida' ? depositosVal : depositosCli} totalClientes={totalClientes}/>
         <EvolucaoDiaria/>
       </div>
 
-      {/* Ranking de Operadores com dados reais — ocupa largura total */}
-      <ChartCard title="Ranking de Operadores" subtitle="Por atingimento de meta (%)" height={240}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={rankingOperadores} margin={{ top:4, right:12, left:-10, bottom:40 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.6)" vertical={false}/>
-            <XAxis dataKey="nome" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false}
-              axisLine={{ stroke:'#3a2d55' }} angle={-25} textAnchor="end" height={55}
-              tickFormatter={(v:string) => v.split(' ')[0] ?? v}/>
-            <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}
-              tickFormatter={(v:unknown) => `${Number(v).toFixed(0)}%`}/>
-            <Tooltip content={<RankTooltip/>}/>
-            <Bar dataKey="atingimento" name="Atingimento %" radius={[3,3,0,0]}>
-              {rankingOperadores.map((_,i) => <Cell key={i} fill={i===0?'#aa97ef':'#8062de'} opacity={1-i*0.08}/>)}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
 
       <RecuperacaoPorCarteira/>
     </div>
