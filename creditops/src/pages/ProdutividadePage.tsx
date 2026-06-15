@@ -149,7 +149,7 @@ export default function ProdutividadePage() {
         {/* Seletor de operador */}
         <div style={{ display:'flex', alignItems:'center', gap:10, background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:8, padding:'6px 14px' }}>
           <User size={14} style={{ color:'var(--d-text-dim)' }}/>
-          <select value={emailFiltro} onChange={e => { setSelectedEmail(e.target.value); setDataLig(''); }}
+          <select value={emailFiltro} onChange={e => { setSelectedEmail(e.target.value); setDataLig('all'); }}
             style={{ background:'transparent', border:'none', outline:'none', color:'var(--d-text)', fontSize:'0.88rem', fontWeight:700, cursor:'pointer', padding:'0 4px', appearance:'auto' }}>
             {operadores.map(([email, nome]) => (
               <option key={email} value={email} style={{ background:'#201b36', color:'#e8e4f0' }}>{nome}</option>
