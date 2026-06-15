@@ -78,15 +78,23 @@ export default function ProdutividadePage() {
     return Array.from(set).sort((a, b) => b.split('/').reverse().join('').localeCompare(a.split('/').reverse().join('')));
   }, [ligacoes, emailFiltro]);
 
-  const [dataLig, setDataLig] = useState<string>('');
-  const dataLigFiltro = dataLig || datasLig[0] || '';
+  const [dataLig, setDataLig] = useState<string>('all');
+  // 'all' = mês inteiro, ou uma data específica
 
   const ligHoras = useMemo(() => {
     return HORAS.map(h => {
-      const row = ligacoes.find(r => r.agent === emailFiltro && r.data === dataLigFiltro && r.hora === h);
-      return { hora: h, tentativas: row?.tentativas ?? 0, efetivas: row?.efetivas ?? 0 };
+      const rows = ligacoes.filter(r =>
+        r.agent === emailFiltro &&
+        (dataLig === 'all' || r.data === dataLig) &&
+        r.hora === h
+      );
+      return {
+        hora: h,
+        tentativas: rows.reduce((s, r) => s + r.tentativas, 0),
+        efetivas:   rows.reduce((s, r) => s + r.efetivas, 0),
+      };
     });
-  }, [ligacoes, emailFiltro, dataLigFiltro]);
+  }, [ligacoes, emailFiltro, dataLig]);
 
   const totalTent = ligHoras.reduce((s, r) => s + r.tentativas, 0);
   const totalEfet = ligHoras.reduce((s, r) => s + r.efetivas, 0);
@@ -246,8 +254,9 @@ export default function ProdutividadePage() {
               {datasLig.length > 0 && (
                 <div style={{ display:'flex', alignItems:'center', gap:8, background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:6, padding:'4px 10px' }}>
                   <span style={{ fontSize:'0.68rem', color:'var(--d-text-dim)', textTransform:'uppercase', letterSpacing:'0.05em' }}>Data</span>
-                  <select value={dataLigFiltro} onChange={e => setDataLig(e.target.value)}
+                  <select value={dataLig} onChange={e => setDataLig(e.target.value)}
                     style={{ background:'transparent', border:'none', outline:'none', color:'var(--d-text)', fontSize:'0.82rem', fontWeight:700, cursor:'pointer' }}>
+                    <option value="all" style={{ background:'#201b36' }}>Mês inteiro</option>
                     {datasLig.map(d => <option key={d} value={d} style={{ background:'#201b36' }}>{d}</option>)}
                   </select>
                 </div>
@@ -271,7 +280,7 @@ export default function ProdutividadePage() {
                 {/* Gráfico por hora */}
                 <div className="dash-card" style={{ padding:'0.75rem 1rem' }}>
                   <div style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.05em', color:'var(--d-text-dim)', marginBottom:10 }}>
-                    Tentativas e Efetivas por Hora — {dataLigFiltro}
+                    Tentativas e Efetivas por Hora — {dataLig === 'all' ? 'Mês inteiro' : dataLig}
                   </div>
                   <ResponsiveContainer width="100%" height={200}>
                     <LineChart data={ligHoras} margin={{ top:4, right:12, left:-20, bottom:0 }}>
