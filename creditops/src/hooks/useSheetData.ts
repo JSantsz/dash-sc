@@ -161,27 +161,22 @@ export function parseDepositos(rows: string[][]): Partial<SheetData> {
   const completoD  = primRows.find(r => (r[0]??'').trim() === 'Completo' && r[1] && cleanNum(r[1]) > 1000000);
   const completoPct= primRows.find(r => (r[0]??'').trim() === 'Completo %');
 
-  // Promessas — soma todas as linhas (excl. % e cabeçalhos)
-  const promBlock     = sliceBetween(primRows, 'Promessas', ['Depósito', 'Carteira Secundária']);
-  const promCliBlock  = promBlock.filter(r => {
-    const l = (r[0]??'').trim().toLowerCase();
-    return l !== '' && !l.endsWith('%') && !['clientes','dívida','cliente'].includes(l);
-  });
-  // Clientes: soma col 1 (Total) de todas as linhas de promessa que são da seção Clientes
-  const promCliRows  = promCliBlock.slice(0, promCliBlock.findIndex(r => (r[0]??'').trim().toLowerCase() === 'dívida') || promCliBlock.length);
-  const promDivRows  = promCliBlock.slice(promCliBlock.findIndex(r => (r[0]??'').trim().toLowerCase() === 'dívida') + 1);
-
+  // Promessas — soma todas as linhas de cada seção (Clientes e Dívida)
+  const promBlock   = sliceBetween(primRows, 'Promessas', ['Depósito', 'Carteira Secundária']);
   const PROM_LABELS = ['não pagará','sem promessa','vencida','promessa parcial','promessa completa','vigente'];
-  const promCli = promCliBlock.filter(r => PROM_LABELS.includes((r[0]??'').trim().toLowerCase()))
-    .reduce((s, r) => s + cleanNum(r[1] ?? '0'), 0);
-  const promDiv = (() => {
-    // Encontra o bloco de dívida dentro de promBlock
-    const divIdx = promBlock.findIndex(r => (r[0]??'').trim().toLowerCase() === 'dívida');
-    if (divIdx === -1) return 0;
-    return promBlock.slice(divIdx + 1)
+
+  function sumSection(rows: string[][], headerLabel: string, stopLabel: string): number {
+    const hi = findRow(rows, headerLabel);
+    if (hi < 0) return 0;
+    const stopIdx = findRow(rows, stopLabel, hi + 1);
+    const end = stopIdx > 0 ? stopIdx : rows.length;
+    return rows.slice(hi + 1, end)
       .filter(r => PROM_LABELS.includes((r[0]??'').trim().toLowerCase()))
       .reduce((s, r) => s + cleanNum(r[1] ?? '0'), 0);
-  })();
+  }
+
+  const promCli = sumSection(promBlock, 'Clientes', 'Dívida');
+  const promDiv = sumSection(promBlock, 'Dívida', '');
 
   const totalClientes   = cleanNum(assignRow?.[1]  ?? '0');
   const totalDivida     = cleanNum(dividaRow?.[1]  ?? '0');

@@ -152,10 +152,10 @@ export default function Overview() {
 
       <div style={{ display:'grid', gridTemplateColumns:'1fr 2fr', gap:12 }}>
         <FunnelOperacional
-          totalClientes={visao === 'divida' ? totalValor        : totalClientes}
-          localizados={  visao === 'divida' ? localizadosVal    : localizadosCli}
-          depositos={    visao === 'divida' ? depositosVal      : depositosCli}
-          promessas={    visao === 'divida' ? promessasVal      : promessasCli}
+          totalClientes={visao === 'divida' ? totalValor     : totalClientes}
+          localizados={  visao === 'divida' ? localizadosVal : localizadosCli}
+          depositos={    visao === 'divida' ? depositosVal   : depositosCli}
+          promessas={    visao === 'divida' ? promessasVal   : promessasCli}
         />
         <EvolucaoDiaria/>
       </div>
