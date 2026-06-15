@@ -103,7 +103,7 @@ function buildTable(title: string, cols: string[], rawRows: string[][], skipLabe
 
 // ── Parser Resumo Depósitos ───────────────────────────────────────────────────
 
-function parseDepositos(rows: string[][]): Partial<SheetData> {
+export function parseDepositos(rows: string[][]): Partial<SheetData> {
   // Encontra separação Primária / Secundária
   const secIdx = findRow(rows, 'Carteira Secundária');
   const primRows = rows.slice(0, secIdx > 0 ? secIdx : rows.length);
@@ -196,7 +196,7 @@ function parseDepositos(rows: string[][]): Partial<SheetData> {
 
 // ── Parser Resumo Executivo ───────────────────────────────────────────────────
 
-function parseExecutivo(rows: string[][]): Partial<SheetData> {
+export function parseExecutivo(rows: string[][]): Partial<SheetData> {
   const execRows: ExecRow[] = [];
   let equipe: 'Antonio' | 'Ana' = 'Antonio';
   let team1: ExecRow[] = [], team2: ExecRow[] = [];
@@ -267,7 +267,7 @@ function parseExecutivo(rows: string[][]): Partial<SheetData> {
 
 // ── Parser Resumo Baixas ──────────────────────────────────────────────────────
 
-function parseBaixas(rows: string[][]): Partial<SheetData> {
+export function parseBaixas(rows: string[][]): Partial<SheetData> {
   function parseSection(startLabel: string, endLabel: string, hasRep: boolean): BaixasRow[] {
     const start = findRow(rows, startLabel);
     if (start < 0) return [];
@@ -305,7 +305,7 @@ function parseBaixas(rows: string[][]): Partial<SheetData> {
 
 // ── Parser Resumo Ligações ────────────────────────────────────────────────────
 
-function parseLigacoes(rows: string[][]): LigacaoRow[] {
+export function parseLigacoes(rows: string[][]): LigacaoRow[] {
   if (rows.length < 2) return [];
   // Pula header
   return rows.slice(1)
@@ -321,14 +321,24 @@ function parseLigacoes(rows: string[][]): LigacaoRow[] {
 
 // ── Hook principal ────────────────────────────────────────────────────────────
 
-export function useSheetData() {
-  const [data, setData]       = useState<SheetData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+// ── Module-level shared cache ─────────────────────────────────────────────────
+// Todas as instâncias de useSheetData compartilham o mesmo dado.
+// Isso evita múltiplas chamadas à API e garante consistência entre componentes.
 
-  const load = useCallback(async () => {
-    setLoading(true); setError(null);
+type Listener = () => void;
+let _data: SheetData | null = null;
+let _loading = true;
+let _error: string | null = null;
+let _lastUpdated: Date = new Date();
+let _fetchPromise: Promise<void> | null = null;
+const _listeners = new Set<Listener>();
+
+function notifyAll() { _listeners.forEach(fn => fn()); }
+
+async function loadData() {
+  if (_fetchPromise) return _fetchPromise;
+  _loading = true; _error = null; notifyAll();
+  _fetchPromise = (async () => {
     try {
       const [depRows, execRows, baixasRows, ligacoesRows] = await Promise.all([
         fetchSheet(SHEET_URLS.resumoDepositos),
@@ -340,20 +350,39 @@ export function useSheetData() {
       const exec     = parseExecutivo(execRows);
       const baixas   = parseBaixas(baixasRows);
       const ligacoes = parseLigacoes(ligacoesRows);
-      setData({ ...dep, ...exec, ...baixas, ligacoes } as SheetData);
-      setLastUpdated(new Date());
+      _data = { ...dep, ...exec, ...baixas, ligacoes } as SheetData;
+      _lastUpdated = new Date();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Erro ao carregar dados');
+      _error = e instanceof Error ? e.message : 'Erro ao carregar dados';
     } finally {
-      setLoading(false);
+      _loading = false;
+      _fetchPromise = null;
+      notifyAll();
     }
-  }, []);
+  })();
+  return _fetchPromise;
+}
+
+export function useSheetData() {
+  const [, setTick] = useState(0);
 
   useEffect(() => {
-    load();
-    const id = setInterval(load, 5 * 60 * 1000);
-    return () => clearInterval(id);
-  }, [load]);
+    const rerender = () => setTick(n => n + 1);
+    _listeners.add(rerender);
+    if (!_data && !_fetchPromise) loadData();
+    const interval = setInterval(() => { _fetchPromise = null; loadData(); }, 5 * 60 * 1000);
+    return () => {
+      _listeners.delete(rerender);
+      clearInterval(interval);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  return { data, loading, error, lastUpdated, refresh: load };
+  return {
+    data: _data,
+    loading: _loading,
+    error: _error,
+    lastUpdated: _lastUpdated,
+    refresh: () => { _fetchPromise = null; loadData(); },
+  };
 }
