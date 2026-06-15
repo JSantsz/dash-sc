@@ -142,6 +142,7 @@ function Metric({ label, value, color, bold }: { label: string; value: string; c
 export default function Operadores() {
   const { data, loading, error, refresh } = useSheetData();
   const { filters } = useFilters();
+  const [timeFiltro, setTimeFiltro] = useState<'all'|'Antonio'|'Ana'>('all');
 
   // Agrega por executivo (soma carteiras)
   const executivos = useMemo(() => {
@@ -149,6 +150,7 @@ export default function Operadores() {
     let rows = data.executivoRows;
     if (filters.operador !== 'all') rows = rows.filter(r => r.email === filters.operador);
     if (filters.carteira !== 'all') rows = rows.filter(r => r.carteira === filters.carteira);
+    if (timeFiltro !== 'all')       rows = rows.filter(r => r.equipe === timeFiltro);
     const map = new Map<string, {
       nome: string; email: string; equipe: string;
       assignado: number; completo: number; parcial: number; depositoTotal: number;
@@ -206,9 +208,26 @@ export default function Operadores() {
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-        <div style={{ background:'var(--d-accent-muted)', borderRadius:8, padding:'7px', display:'flex', alignItems:'center', color:'var(--d-accent-light)' }}><Users size={18}/></div>
-        <div><h1 className="page-title">Operadores</h1><p className="page-subtitle">Ranking e performance individual — dados do Resumo Executivo</p></div>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:10 }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+          <div style={{ background:'var(--d-accent-muted)', borderRadius:8, padding:'7px', display:'flex', alignItems:'center', color:'var(--d-accent-light)' }}><Users size={18}/></div>
+          <div><h1 className="page-title">Operadores</h1><p className="page-subtitle">Ranking e performance individual — dados do Resumo Executivo</p></div>
+        </div>
+
+        {/* Filtro de time */}
+        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          <span style={{ fontSize:'0.7rem', color:'var(--d-text-dim)', fontWeight:600 }}>Time:</span>
+          <div style={{ display:'flex', background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:8, padding:3, gap:3 }}>
+            {([['all','Todos'],['Antonio','Time Douglas'],['Ana','Time Ana']] as const).map(([v,l]) => (
+              <button key={v} onClick={()=>setTimeFiltro(v)} style={{
+                padding:'4px 12px', fontSize:'0.72rem', fontWeight:700, borderRadius:6,
+                cursor:'pointer', border:'none', transition:'all 0.15s',
+                background: timeFiltro===v ? 'var(--d-accent)' : 'transparent',
+                color:      timeFiltro===v ? '#fff' : 'var(--d-text-dim)',
+              }}>{l}</button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -222,7 +241,11 @@ export default function Operadores() {
 
       {/* Cards por carteira + Ranking */}
       <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:12 }}>
-        <CarteiraTable rawRows={data?.executivoRows ?? []} />
+        <CarteiraTable rawRows={(data?.executivoRows ?? []).filter(r =>
+        (filters.operador === 'all' || r.email === filters.operador) &&
+        (filters.carteira === 'all' || r.carteira === filters.carteira) &&
+        (timeFiltro === 'all' || r.equipe === timeFiltro)
+      )} />
 
         <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
           <div style={{ fontSize:'0.82rem', fontWeight:700, color:'var(--d-text)', marginBottom:4 }}>🏆 Ranking Executivos</div>
