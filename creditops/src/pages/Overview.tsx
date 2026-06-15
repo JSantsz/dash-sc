@@ -160,7 +160,6 @@ export default function Overview() {
       </div>
 
 
-      <RecuperacaoPorCarteira/>
     </div>
   );
 }
