@@ -191,7 +191,7 @@ export default function Operadores() {
       ex.pctBaixas   = ex.assignado > 0 ? (ex.montoBaixas / ex.assignado) * 100 : 0;
     }
     return Array.from(map.values()).sort((a,b) => b.atingimento - a.atingimento);
-  }, [data]);
+  }, [data, filters.operador, filters.carteira, timeFiltro]);
 
   if (loading) return <div className="dash-loading"><RefreshCw size={20} style={{ animation:'spin 1s linear infinite', color:'var(--d-accent)' }}/>&nbsp;Carregando...<style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style></div>;
   if (error)   return <div className="dash-loading" style={{ flexDirection:'column', gap:8, color:'var(--d-danger)' }}><AlertCircle size={20}/>{error}<button onClick={refresh} style={{ background:'var(--d-accent-muted)', border:'1px solid var(--d-accent)', color:'var(--d-accent-light)', borderRadius:6, padding:'0.3rem 0.8rem', cursor:'pointer', fontSize:'0.78rem' }}>Tentar novamente</button></div>;
