@@ -75,10 +75,12 @@ export default function ProdutividadePage() {
   // Dados de ligações do operador — última data disponível
   const datasLig = useMemo(() => {
     const set = new Set(ligacoes.filter(r => r.agent === emailFiltro).map(r => r.data));
-    return Array.from(set).sort((a, b) => b.split('/').reverse().join('').localeCompare(a.split('/').reverse().join('')));
+    return Array.from(set).sort((a, b) => a.split('/').reverse().join('').localeCompare(b.split('/').reverse().join('')));
   }, [ligacoes, emailFiltro]);
 
   const [dataLig, setDataLig] = useState<string>('all');
+
+  const datasExibidas = dataLig === 'all' ? datasLig : datasLig.filter(d => d === dataLig);
   // 'all' = mês inteiro, ou uma data específica
 
   const ligHoras = useMemo(() => {
@@ -95,7 +97,6 @@ export default function ProdutividadePage() {
       };
     });
   }, [ligacoes, emailFiltro, dataLig]);
-
   const totalTent = ligHoras.reduce((s, r) => s + r.tentativas, 0);
   const totalEfet = ligHoras.reduce((s, r) => s + r.efetivas, 0);
   const txLig     = totalTent > 0 ? (totalEfet / totalTent) * 100 : 0;
@@ -257,11 +258,23 @@ export default function ProdutividadePage() {
               </div>
             ) : (
               <>
-                <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(140px, 1fr))', gap:10, margin:'8px 0 12px' }}>
-                  <KPIBlock label="Tentativas"   value={String(totalTent)} color="var(--d-accent-light)" icon={<Phone size={14}/>}/>
-                  <KPIBlock label="Efetivas"     value={String(totalEfet)} color="var(--d-success)"/>
-                  <KPIBlock label="Taxa Conv."   value={`${txLig.toFixed(1)}%`} color={txLig>=50?'var(--d-success)':txLig>=30?'var(--d-warning)':'var(--d-danger)'}/>
-                  <KPIBlock label="Hora de Pico" value={horaPico?.hora ?? '---'} sub={`${horaPico?.tentativas ?? 0} tent.`} color="var(--d-blue)"/>
+                {/* KPIs + filtro de dia */}
+                <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:12, margin:'8px 0 12px', flexWrap:'wrap' }}>
+                  <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(140px, 1fr))', gap:10, flex:1 }}>
+                    <KPIBlock label="Tentativas"   value={String(totalTent)} color="var(--d-accent-light)" icon={<Phone size={14}/>}/>
+                    <KPIBlock label="Efetivas"     value={String(totalEfet)} color="var(--d-success)"/>
+                    <KPIBlock label="Taxa Conv."   value={`${txLig.toFixed(1)}%`} color={txLig>=50?'var(--d-success)':txLig>=30?'var(--d-warning)':'var(--d-danger)'}/>
+                    <KPIBlock label="Hora de Pico" value={horaPico?.hora ?? '---'} sub={`${horaPico?.tentativas ?? 0} tent.`} color="var(--d-blue)"/>
+                  </div>
+                  {/* Filtro de dia */}
+                  <div style={{ display:'flex', alignItems:'center', gap:8, background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:8, padding:'6px 12px', flexShrink:0 }}>
+                    <span style={{ fontSize:'0.68rem', fontWeight:600, color:'var(--d-text-dim)', textTransform:'uppercase', letterSpacing:'0.05em', whiteSpace:'nowrap' }}>Dia</span>
+                    <select value={dataLig} onChange={e => setDataLig(e.target.value)}
+                      style={{ background:'transparent', border:'none', outline:'none', color:'var(--d-text)', fontSize:'0.85rem', fontWeight:700, cursor:'pointer' }}>
+                      <option value="all" style={{ background:'#252257' }}>Todos</option>
+                      {datasLig.map(d => <option key={d} value={d} style={{ background:'#252257' }}>{d}</option>)}
+                    </select>
+                  </div>
                 </div>
 
                 {(['tentativas','efetivas'] as const).map(tipo => {
@@ -290,7 +303,7 @@ export default function ProdutividadePage() {
                             </tr>
                           </thead>
                           <tbody>
-                            {datasLig.map((dia, i) => {
+                            {datasExibidas.map((dia, i) => {
                               const total = HORAS.reduce((s, h) => {
                                 const row = ligacoes.find(r => r.agent === emailFiltro && r.data === dia && r.hora === h);
                                 return s + (row?.[tipo] ?? 0);
@@ -318,14 +331,14 @@ export default function ProdutividadePage() {
                             <tr style={{ background:'rgba(128,98,222,0.08)', borderTop:'2px solid var(--d-border)' }}>
                               <td style={{ padding:'6px 12px', fontWeight:800, fontSize:'0.72rem', textTransform:'uppercase', color:'var(--d-text)' }}>Total</td>
                               {HORAS.map(h => {
-                                const val = datasLig.reduce((s, dia) => {
+                                const val = datasExibidas.reduce((s, dia) => {
                                   const row = ligacoes.find(r => r.agent === emailFiltro && r.data === dia && r.hora === h);
                                   return s + (row?.[tipo] ?? 0);
                                 }, 0);
                                 return <td key={h} style={{ padding:'6px 8px', textAlign:'center', fontWeight:700 }}>{val > 0 ? <span style={{ color:accentColor }}>{val}</span> : <span style={{ color:'var(--d-text-dim)', opacity:0.3 }}>--</span>}</td>;
                               })}
                               <td style={{ padding:'6px 10px', textAlign:'center', fontWeight:800, color:accentColor, borderLeft:'1px solid var(--d-border)' }}>
-                                {datasLig.reduce((s, dia) => s + HORAS.reduce((ss, h) => { const row = ligacoes.find(r => r.agent === emailFiltro && r.data === dia && r.hora === h); return ss + (row?.[tipo] ?? 0); }, 0), 0) || '--'}
+                                {datasExibidas.reduce((s, dia) => s + HORAS.reduce((ss, h) => { const row = ligacoes.find(r => r.agent === emailFiltro && r.data === dia && r.hora === h); return ss + (row?.[tipo] ?? 0); }, 0), 0) || '--'}
                               </td>
                             </tr>
                           </tbody>
