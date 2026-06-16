@@ -232,10 +232,9 @@ export default function LigacoesPage() {
     });
   }, [ligacoes]);
 
-  const [dataSelecionada, setDataSelecionada] = useState<string>('all');
-  // 'all' = mês inteiro, ou data específica
-  const dataFiltro = dataSelecionada === 'all' ? (datas[datas.length - 1] || '') : dataSelecionada;
-  const viewMes    = dataSelecionada === 'all';
+  const [dataSelecionada, setDataSelecionada] = useState<string>('');
+  const dataFiltro = dataSelecionada || datas[datas.length - 1] || '';
+  const viewMes    = false;
 
   const agentes = useMemo(() => {
     const set = new Set(ligacoes.filter(r => viewMes || r.data === dataFiltro).map(r => r.agent));
@@ -367,9 +366,8 @@ export default function LigacoesPage() {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'var(--d-card)', border: '1px solid var(--d-border)', borderRadius: 8, padding: '6px 12px' }}>
           <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--d-text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>Data</span>
-          <select value={dataSelecionada} onChange={e => setDataSelecionada(e.target.value)}
+          <select value={dataSelecionada || dataFiltro} onChange={e => setDataSelecionada(e.target.value)}
             style={{ background: 'transparent', border: 'none', outline: 'none', color: 'var(--d-text)', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', padding: '0 4px', appearance: 'auto' }}>
-            <option value="all" style={{ background: '#201b36', color: '#e8e4f0' }}>Todos os dias</option>
             {datas.map(d => <option key={d} value={d} style={{ background: '#201b36', color: '#e8e4f0' }}>{d}</option>)}
           </select>
         </div>
@@ -379,81 +377,6 @@ export default function LigacoesPage() {
         <div className="dash-card" style={{ padding: '2.5rem', textAlign: 'center', color: 'var(--d-text-dim)', fontSize: '0.85rem' }}>
           Nenhum dado de ligação para a data selecionada.
         </div>
-      ) : viewMes ? (
-        /* Visão mês inteiro: dias × horas */
-        <>
-          {(['tentativas','efetivas'] as const).map(tipo => {
-            const accentColor = tipo === 'efetivas' ? 'var(--d-success)' : 'var(--d-accent)';
-            const titulo = tipo === 'tentativas' ? 'Tentativa de Ligação' : 'Ligação Efetiva';
-            const totalGeral = datas.reduce((s, dia) =>
-              s + HORAS.reduce((ss, h) => {
-                const v = ligacoes.filter(r => r.agent === (filters.operador !== 'all' ? filters.operador : r.agent) && r.data === dia && r.hora === h).reduce((a, r) => a + r[tipo], 0);
-                return ss + v;
-              }, 0), 0);
-            return (
-              <div key={tipo} className="dash-card" style={{ overflow: 'hidden' }}>
-                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0.75rem 1rem', borderBottom:'1px solid var(--d-border)' }}>
-                  <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <div style={{ width:3, height:18, borderRadius:2, background:accentColor }}/>
-                    <span style={{ fontSize:'0.78rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--d-text)' }}>{titulo}</span>
-                  </div>
-                  <span style={{ fontSize:'0.72rem', fontWeight:700, color:accentColor, background:`color-mix(in srgb, ${accentColor} 12%, transparent)`, padding:'2px 10px', borderRadius:20 }}>
-                    Total: {totalGeral}
-                  </span>
-                </div>
-                <div style={{ overflowX:'auto' }}>
-                  <table style={{ width:'100%', borderCollapse:'collapse', minWidth:900, fontSize:'0.75rem' }}>
-                    <thead>
-                      <tr style={{ background:'rgba(0,0,0,0.2)' }}>
-                        <th style={{ padding:'6px 12px', textAlign:'left', fontSize:'0.68rem', fontWeight:700, color:'var(--d-text-dim)', textTransform:'uppercase', borderBottom:'1px solid var(--d-border)', minWidth:110, whiteSpace:'nowrap' }}>Dia</th>
-                        {HORAS.map(h => (
-                          <th key={h} style={{ padding:'6px 8px', textAlign:'center', fontSize:'0.68rem', fontWeight:700, color:'var(--d-text-dim)', textTransform:'uppercase', borderBottom:'1px solid var(--d-border)', minWidth:44, whiteSpace:'nowrap' }}>{h}</th>
-                        ))}
-                        <th style={{ padding:'6px 10px', textAlign:'center', fontSize:'0.68rem', fontWeight:700, color:'var(--d-text)', textTransform:'uppercase', borderBottom:'1px solid var(--d-border)', minWidth:52, borderLeft:'1px solid var(--d-border)', whiteSpace:'nowrap' }}>Total</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {datas.map((dia, i) => {
-                        const agentFilter = filters.operador !== 'all' ? filters.operador : null;
-                        const rowTotal = HORAS.reduce((s, h) =>
-                          s + ligacoes.filter(r => (!agentFilter || r.agent === agentFilter) && r.data === dia && r.hora === h).reduce((a, r) => a + r[tipo], 0), 0);
-                        return (
-                          <tr key={dia} style={{ background:i%2===0?'transparent':'rgba(0,0,0,0.1)', transition:'background 0.15s' }}
-                            onMouseEnter={e=>(e.currentTarget.style.background='rgba(128,98,222,0.07)')}
-                            onMouseLeave={e=>(e.currentTarget.style.background=i%2===0?'transparent':'rgba(0,0,0,0.1)')}>
-                            <td style={{ padding:'5px 12px', fontWeight:600, color:'var(--d-text-dim)', borderBottom:'1px solid rgba(58,45,85,0.3)', whiteSpace:'nowrap' }}>{dia}</td>
-                            {HORAS.map(h => {
-                              const val = ligacoes.filter(r => (!agentFilter || r.agent === agentFilter) && r.data === dia && r.hora === h).reduce((a, r) => a + r[tipo], 0);
-                              return (
-                                <td key={h} style={{ padding:'5px 8px', textAlign:'center', borderBottom:'1px solid rgba(58,45,85,0.3)' }}>
-                                  {val > 0 ? <span style={{ color:accentColor, fontWeight:600 }}>{val}</span> : <span style={{ color:'var(--d-text-dim)', opacity:0.3 }}>—</span>}
-                                </td>
-                              );
-                            })}
-                            <td style={{ padding:'5px 10px', textAlign:'center', fontWeight:700, color:rowTotal>0?accentColor:'var(--d-text-dim)', borderBottom:'1px solid rgba(58,45,85,0.3)', borderLeft:'1px solid var(--d-border)' }}>
-                              {rowTotal || '—'}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                      {/* Linha total */}
-                      <tr style={{ background:'rgba(128,98,222,0.08)', borderTop:'2px solid var(--d-border)' }}>
-                        <td style={{ padding:'6px 12px', fontWeight:800, fontSize:'0.72rem', textTransform:'uppercase', color:'var(--d-text)' }}>Total</td>
-                        {HORAS.map(h => {
-                          const agentFilter = filters.operador !== 'all' ? filters.operador : null;
-                          const val = datas.reduce((s, dia) =>
-                            s + ligacoes.filter(r => (!agentFilter || r.agent === agentFilter) && r.data === dia && r.hora === h).reduce((a, r) => a + r[tipo], 0), 0);
-                          return <td key={h} style={{ padding:'6px 8px', textAlign:'center', fontWeight:700 }}>{val > 0 ? <span style={{ color:accentColor }}>{val}</span> : <span style={{ color:'var(--d-text-dim)', opacity:0.3 }}>—</span>}</td>;
-                        })}
-                        <td style={{ padding:'6px 10px', textAlign:'center', fontWeight:800, color:accentColor, borderLeft:'1px solid var(--d-border)' }}>{totalGeral || '—'}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            );
-          })}
-        </>
       ) : (
         <>
           <TabelaLigacoes tipo="tentativas" titulo="Tentativa de Ligação" />
