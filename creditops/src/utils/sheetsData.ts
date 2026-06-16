@@ -47,6 +47,10 @@ export function cleanPct(val: string): string {
 const cache: Record<string, { data: string[][], ts: number }> = {};
 const CACHE_TTL = 5 * 60 * 1000;
 
+export function clearSheetCache() {
+  Object.keys(cache).forEach(k => delete cache[k]);
+}
+
 export async function fetchSheet(url: string): Promise<string[][]> {
   const now = Date.now();
   if (cache[url] && now - cache[url]!.ts < CACHE_TTL) return cache[url]!.data;

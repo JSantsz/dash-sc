@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchSheet, SHEET_URLS } from '../utils/sheetsData';
+import { fetchSheet, SHEET_URLS, clearSheetCache } from '../utils/sheetsData';
 import type { OpTable, OpRow, RowType } from '../utils/mockData';
 
 export interface SheetKPIs {
@@ -399,6 +399,6 @@ export function useSheetData() {
     loading: _loading,
     error: _error,
     lastUpdated: _lastUpdated,
-    refresh: () => { _fetchPromise = null; loadData(); },
+    refresh: () => { clearSheetCache(); _fetchPromise = null; loadData(); },
   };
 }

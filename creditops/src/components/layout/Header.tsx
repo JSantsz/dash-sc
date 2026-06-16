@@ -28,7 +28,10 @@ function FilterSelect({ label, value, options, onChange }: {
 }
 
 export function Header() {
-  const { filters, setFilter, resetFilters, refresh, lastUpdated, isLoading } = useFilters();
+  const { filters, setFilter, resetFilters, lastUpdated } = useFilters();
+  const { refresh: refreshData, loading: isLoading } = useSheetData();
+
+  const handleRefresh = () => refreshData();
   const { data } = useSheetData();
   const location = useLocation();
   const showFilters = FILTER_PAGES.includes(location.pathname);
@@ -71,7 +74,7 @@ export function Header() {
           <Clock size={11} />{formatDateTime(lastUpdated)}
         </div>
         <button
-          onClick={refresh} disabled={isLoading}
+          onClick={handleRefresh} disabled={isLoading}
           style={{ display:'flex', alignItems:'center', gap:5, background:'var(--d-accent-muted)', border:'1px solid var(--d-accent)', color:'var(--d-accent-light)', borderRadius:6, padding:'0.3rem 0.75rem', fontSize:'0.75rem', fontWeight:600, cursor:isLoading?'not-allowed':'pointer', opacity:isLoading?0.6:1, transition:'all 0.15s ease' }}
         >
           <RefreshCw size={13} style={{ animation:isLoading?'spin 1s linear infinite':'none' }} />
