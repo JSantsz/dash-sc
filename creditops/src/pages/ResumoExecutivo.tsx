@@ -239,6 +239,7 @@ export default function ResumoExecutivo() {
   const grandTotal   = isFiltered ? calcTotal(executivoRows, 'Total Geral')        : data!.grandTotal!;
 
   const gt = grandTotal!;
+  const debugInfo = `Linhas: ${executivoRows.length} | Assignado: ${gt.assignado.toLocaleString('pt-BR')} | Completo: ${gt.completo.toLocaleString('pt-BR')}`;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
@@ -255,6 +256,9 @@ export default function ResumoExecutivo() {
         <KPICard label="Total Baixas"      value={formatCurrency(gt.montoBaixas,true)}   status="danger"/>
         <KPICard label="% Baixas"          value={`${gt.pctBaixas.toFixed(1)}%`}         status={gt.pctBaixas<=5?'success':gt.pctBaixas<=10?'warning':'danger'}/>
         <KPICard label="Atingimento Médio" value={`${avgAting.toFixed(1)}%`}             status={statusKpi(avgAting)}/>
+      </div>
+      <div style={{ fontSize:'0.68rem', color:'var(--d-text-dim)', padding:'2px 0' }}>
+        🔍 Debug: {debugInfo}
       </div>
       <Tabs defaultValue="tabela">
         <TabsList className="tabs-list-override">
