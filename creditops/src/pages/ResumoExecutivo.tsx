@@ -230,9 +230,13 @@ export default function ResumoExecutivo() {
 
   const antonioRows  = executivoRows.filter(r => r.equipe === 'Antonio');
   const anaRows      = executivoRows.filter(r => r.equipe === 'Ana');
-  const equipe1Total = calcTotal(antonioRows,     'Total Equipe Antonio');
-  const equipe2Total = calcTotal(anaRows,         'Total Equipe Ana');
-  const grandTotal   = calcTotal(executivoRows,   'Total Geral');
+  const isFiltered   = filters.operador !== 'all' || filters.carteira !== 'all';
+
+  // Quando sem filtro, usa totais do parser (batem com a planilha)
+  // Quando com filtro, recalcula a partir das linhas filtradas
+  const equipe1Total = isFiltered ? calcTotal(antonioRows, 'Total Equipe Antonio') : data!.equipe1Total!;
+  const equipe2Total = isFiltered ? calcTotal(anaRows,     'Total Equipe Ana')     : data!.equipe2Total!;
+  const grandTotal   = isFiltered ? calcTotal(executivoRows, 'Total Geral')        : data!.grandTotal!;
 
   const gt = grandTotal!;
 
