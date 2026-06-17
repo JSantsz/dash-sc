@@ -217,27 +217,42 @@ export function parseExecutivo(rows: string[][]): Partial<SheetData> {
   let equipe: 'Antonio' | 'Ana' = 'Antonio';
   let team1: ExecRow[] = [], team2: ExecRow[] = [];
   let foundTotal1 = false;
-
-  // Buffers para capturar as linhas "Total Equipe" diretamente
-  let totalRow1: string[] | null = null;
-  let totalRow2: string[] | null = null;
+  let inTotalSection = false;
+  let grandTotalRow: string[] | null = null;
+  let team1TotalRow: string[] | null = null;
+  let team2TotalRow: string[] | null = null;
 
   for (const r of rows) {
     const c0 = (r[0]??'').trim(), c1 = (r[1]??'').trim(), c2 = (r[2]??'').trim();
 
-    // Detecta linha "Total Equipe" em qualquer coluna e guarda os valores
+    // Detecta início da seção "Total Equipe"
     if (c0 === 'Total Equipe' || c1 === 'Total Equipe' || c2 === 'Total Equipe') {
-      if (!foundTotal1) {
-        foundTotal1 = true;
-        // Captura os valores numéricos desta linha — procura onde começam
-        const numericCols = r.map((v,i) => ({ i, v: cleanNum(v) })).filter(x => x.v > 0);
-        if (numericCols.length > 0) totalRow1 = r;
-        equipe = 'Ana';
-      } else {
-        const numericCols = r.map((v,i) => ({ i, v: cleanNum(v) })).filter(x => x.v > 0);
-        if (numericCols.length > 0) totalRow2 = r;
-      }
+      if (!foundTotal1) { foundTotal1 = true; equipe = 'Ana'; }
+      inTotalSection = true;
       continue;
+    }
+
+    // Dentro da seção Total Equipe: labels estão em r[3], valores em r[4]+
+    if (inTotalSection) {
+      const c3 = (r[3]??'').trim();
+      if ((c0 === 'Antonio' || c3 === 'Antonio') && cleanNum(r[c3==='Antonio'?4:3] ?? '0') > 0) {
+        team1TotalRow = c3 === 'Antonio' ? ['','','',r[3]??'', r[4]??'', r[5]??'', r[6]??'', r[7]??'', r[8]??'', r[9]??'', r[10]??'', r[11]??'', r[12]??'', r[13]??'', r[14]??'', r[15]??''] : r;
+        continue;
+      }
+      if ((c0 === 'Ana' || c3 === 'Ana') && cleanNum(r[c3==='Ana'?4:3] ?? '0') > 0) {
+        team2TotalRow = c3 === 'Ana' ? ['','','',r[3]??'', r[4]??'', r[5]??'', r[6]??'', r[7]??'', r[8]??'', r[9]??'', r[10]??'', r[11]??'', r[12]??'', r[13]??'', r[14]??'', r[15]??''] : r;
+        continue;
+      }
+      if ((c0 === 'Total' || c3 === 'Total') && cleanNum(r[c3==='Total'?4:3] ?? '0') > 0) {
+        // Normaliza para offset padrão (assignado em r[3])
+        if (c3 === 'Total') {
+          grandTotalRow = ['','','', r[4]??'', r[5]??'', r[6]??'', r[7]??'', r[8]??'', r[9]??'', r[10]??'', r[11]??'', r[12]??'', r[13]??'', r[14]??'', r[15]??'', r[16]??''];
+        } else {
+          grandTotalRow = r;
+        }
+        inTotalSection = false; continue;
+      }
+      if (!c1.includes('@')) continue;
     }
 
     const skip = ['Executivo','Executivos / Carteiras','Antonio','Ana','Total','Total Equipe',''];
@@ -265,22 +280,13 @@ export function parseExecutivo(rows: string[][]): Partial<SheetData> {
     if (equipe === 'Antonio') team1.push(row); else team2.push(row);
   }
 
-  // Constrói ExecTotal a partir de uma linha da planilha (valores diretos)
-  function totalFromRow(r: string[], nome: string): ExecTotal {
-    // Descobre offset: procura onde começa a primeira coluna numérica
-    let offset = 3;
-    for (let i = 3; i < Math.min(r.length, 8); i++) {
-      if (cleanNum(r[i] ?? '0') > 1000) { offset = i; break; }
-    }
-    const a = cleanNum(r[offset]   ?? '0');
-    const c = cleanNum(r[offset+1] ?? '0');
-    const p = cleanNum(r[offset+2] ?? '0');
-    const d = cleanNum(r[offset+3] ?? '0');
-    const w = cleanNum(r[offset+7] ?? '0');
-    const t = cleanNum(r[offset+8] ?? '0');
-    const m = cleanNum(r[offset+10]?? '0');
+  // Lê total direto de uma linha da planilha
+  function rowToTotal(r: string[], nome: string): ExecTotal {
+    const a=cleanNum(r[3]??'0'), c=cleanNum(r[4]??'0'), p=cleanNum(r[5]??'0');
+    const d=cleanNum(r[6]??'0'), w=cleanNum(r[10]??'0'), t=cleanNum(r[11]??'0');
+    const m=cleanNum(r[13]??'0');
     return { nome, assignado:a, completo:c, parcial:p, depositoTotal:d,
-      pctCompleto: a>0?(c/a)*100:0, wpp:w, wppMeetTel:t, pctContato:0,
+      pctCompleto:a>0?(c/a)*100:0, wpp:w, wppMeetTel:t, pctContato:0,
       montoBaixas:m, pctBaixas:a>0?(m/a)*100:0 };
   }
 
@@ -295,10 +301,12 @@ export function parseExecutivo(rows: string[][]): Partial<SheetData> {
       montoBaixas:m, pctBaixas:a>0?(m/a)*100:0 };
   }
 
-  // Usa os totais diretos da planilha se disponíveis, senão soma as linhas
-  const equipe1Total = (totalRow1 ? totalFromRow(totalRow1, 'Antonio') : sumTeam(team1, 'Antonio'));
-  const equipe2Total = (totalRow2 ? totalFromRow(totalRow2, 'Ana')     : sumTeam(team2, 'Ana'));
-  const gt: ExecTotal = {
+  const equipe1Total = team1TotalRow ? rowToTotal(team1TotalRow, 'Antonio') : sumTeam(team1, 'Antonio');
+  const equipe2Total = team2TotalRow ? rowToTotal(team2TotalRow, 'Ana')     : sumTeam(team2, 'Ana');
+
+  // Grand total: usa linha "Total" da planilha se encontrada, senão soma equipes
+  const grandTotalFromRow = grandTotalRow ? rowToTotal(grandTotalRow, 'Total Geral') : null;
+  const gt: ExecTotal = grandTotalFromRow ?? {
     nome:'Total Geral',
     assignado:    equipe1Total.assignado    + equipe2Total.assignado,
     completo:     equipe1Total.completo     + equipe2Total.completo,
