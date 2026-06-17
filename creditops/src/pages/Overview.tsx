@@ -82,7 +82,7 @@ export default function Overview() {
   const totalValor       = isFiltered ? filteredRows.reduce((s,r) => s+r.assignado, 0)         : kpi.carteiraTotalValor;
   const totalClientes    = isFiltered ? filteredRows.length                                     : kpi.carteiraTotalClientes;
   const localizadosCli   = isFiltered ? filteredRows.reduce((s,r) => s+r.wpp+r.wppMeetTel, 0) : kpi.clientesLocalizados;
-  const localizadosVal   = isFiltered ? filteredRows.reduce((s,r) => s+(r.assignado*(r.wpp+r.wppMeetTel)/Math.max(r.wpp+r.wppMeetTel,1)), 0) : totalValor * (kpi.clientesLocalizadosPct/100);
+  const localizadosVal   = isFiltered ? filteredRows.reduce((s,r) => s+r.assignado*(r.wpp+r.wppMeetTel>0?1:0), 0) : kpi.localizadosDividaTotal;
   const locPct           = isFiltered ? (totalClientes>0 ? Math.round((localizadosCli/totalClientes)*100) : 0) : kpi.clientesLocalizadosPct;
   const promessasCli     = isFiltered ? filteredRows.reduce((s,r) => s+r.parcial, 0)           : kpi.promessasVigentes;
   const promessasVal     = isFiltered ? filteredRows.reduce((s,r) => s+r.parcial, 0)           : kpi.promessasDividaTotal;

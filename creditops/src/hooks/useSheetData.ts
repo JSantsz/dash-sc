@@ -4,7 +4,7 @@ import type { OpTable, OpRow, RowType } from '../utils/mockData';
 
 export interface SheetKPIs {
   carteiraTotalClientes: number; carteiraTotalValor: number;
-  clientesLocalizados: number; clientesLocalizadosPct: number;
+  clientesLocalizados: number; clientesLocalizadosPct: number; localizadosDividaTotal: number;
   promessasVigentes: number; promessasDividaTotal: number;
   depositosCompletos: number;
   depositosCompletosPct: number; valorRecuperado: number;
@@ -157,6 +157,11 @@ export function parseDepositos(rows: string[][]): Partial<SheetData> {
   const assignRow  = primRows.find(r => (r[0]??'').trim() === 'Clientes' && r[1] && cleanNum(r[1]) > 100);
   const dividaRow  = primRows.find(r => (r[0]??'').trim() === 'Dívida'   && r[1] && cleanNum(r[1]) > 1000000);
   const totalLoc   = primRows.find(r => (r[0]??'').trim() === 'Total'    && r[1] && cleanNum(r[1]) > 100 && cleanNum(r[1]) < 10000);
+  // Localizados Dívida — Total da seção Dívida do bloco Localizados
+  const locDivBlock = sliceBetween(primRows, 'Localizados', ['Promessas','Depósito','Carteira Secundária']);
+  const locDivSection = sliceBetween(locDivBlock, 'Dívida', ['Promessas','Depósito']);
+  const locDivTotalRow = locDivSection.find(r => (r[0]??'').trim() === 'Total' && cleanNum(r[1]??'0') > 10000);
+  const localizadosDivida = cleanNum(locDivTotalRow?.[1] ?? '0');
   const completoC  = primRows.find(r => (r[0]??'').trim() === 'Completo' && r[1] && cleanNum(r[1]) > 0 && cleanNum(r[1]) < 10000);
   const completoD  = primRows.find(r => (r[0]??'').trim() === 'Completo' && r[1] && cleanNum(r[1]) > 1000000);
   const completoPct= primRows.find(r => (r[0]??'').trim() === 'Completo %');
@@ -192,6 +197,7 @@ export function parseDepositos(rows: string[][]): Partial<SheetData> {
     carteiraTotalValor:    totalDivida,
     clientesLocalizados:   localizados,
     clientesLocalizadosPct: totalClientes > 0 ? Math.round((localizados/totalClientes)*100) : 0,
+    localizadosDividaTotal: localizadosDivida,
     promessasVigentes:     promessas,
     promessasDividaTotal:  promessasDivida,
     depositosCompletos:    depositos,
