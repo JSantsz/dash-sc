@@ -74,6 +74,9 @@ function ProdutividadeModal({
   const ranking = [...agentes]
     .map(a => ({ agent: a, total: HORAS.reduce((s, h) => s + (lookup[`${a}|${h}`]?.tentativas || 0), 0) }))
     .sort((a, b) => b.total - a.total);
+  const rankingEfet = [...agentes]
+    .map(a => ({ agent: a, total: HORAS.reduce((s, h) => s + (lookup[`${a}|${h}`]?.efetivas || 0), 0) }))
+    .sort((a, b) => b.total - a.total);
   const posicao = ranking.findIndex(r => r.agent === agent) + 1;
 
   const tabBtn = (key: 'individual' | 'equipe', label: string) => (
@@ -94,7 +97,7 @@ function ProdutividadeModal({
     }} onClick={onClose}>
       <div style={{
         background: 'var(--d-surface)', borderRadius: 14, border: '1px solid var(--d-border)',
-        width: '100%', maxWidth: 780, maxHeight: '90vh', overflow: 'hidden',
+        width: '100%', maxWidth: 1000, maxHeight: '92vh', overflow: 'hidden',
         display: 'flex', flexDirection: 'column', boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
       }} onClick={e => e.stopPropagation()}>
 
@@ -169,7 +172,7 @@ function ProdutividadeModal({
                 />
               </div>
 
-              {/* Gráfico comparativo por hora */}
+              {/* Gráfico comparativo Tentativas por hora */}
               <div className="dash-card" style={{ padding: '0.75rem 1rem' }}>
                 <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--d-text-dim)', marginBottom: 10 }}>
                   Tentativas: Agente vs Média da Equipe
@@ -187,26 +190,70 @@ function ProdutividadeModal({
                 </ResponsiveContainer>
               </div>
 
-              {/* Ranking geral */}
+              {/* Gráfico comparativo Efetivas por hora */}
               <div className="dash-card" style={{ padding: '0.75rem 1rem' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--d-text-dim)', marginBottom: 10 }}>
-                  Ranking Geral — Tentativas
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--d-success)', marginBottom: 10 }}>
+                  Efetivas: Agente vs Média da Equipe
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {ranking.map((r, i) => {
-                    const isAgent = r.agent === agent;
-                    const pct = ranking[0].total > 0 ? (r.total / ranking[0].total) * 100 : 0;
-                    return (
-                      <div key={r.agent} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ width: 20, textAlign: 'right', fontSize: '0.72rem', fontWeight: 700, color: i < 3 ? '#eab308' : 'var(--d-text-dim)', flexShrink: 0 }}>#{i+1}</span>
-                        <span style={{ fontSize: '0.78rem', width: 130, flexShrink: 0, fontWeight: isAgent ? 700 : 400, color: isAgent ? 'var(--d-accent-light)' : 'var(--d-text)' }}>{nomeAgente(r.agent)}</span>
-                        <div style={{ flex: 1, background: 'rgba(58,45,85,0.5)', borderRadius: 4, height: 8 }}>
-                          <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: isAgent ? 'var(--d-accent)' : 'rgba(128,98,222,0.4)', transition: 'width 0.3s' }} />
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={mediaEquipe} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false} />
+                    <XAxis dataKey="hora" tick={{ fill: '#9991b8', fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fill: '#9991b8', fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <Tooltip contentStyle={TT} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: '#9991b8' }} />
+                    <Bar dataKey="agenteEfet" name={nomeAgente(agent)} fill="#22c55e" radius={[2,2,0,0]} />
+                    <Bar dataKey="mediaEfet"  name="Média Equipe"      fill="#166534" radius={[2,2,0,0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Rankings lado a lado */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                {/* Ranking Tentativas */}
+                <div className="dash-card" style={{ padding: '0.75rem 1rem' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--d-text-dim)', marginBottom: 10 }}>
+                    Ranking — Tentativas
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {ranking.map((r, i) => {
+                      const isAgent = r.agent === agent;
+                      const pct = ranking[0].total > 0 ? (r.total / ranking[0].total) * 100 : 0;
+                      return (
+                        <div key={r.agent} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 20, textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: i < 3 ? '#eab308' : 'var(--d-text-dim)', flexShrink: 0 }}>#{i+1}</span>
+                          <span style={{ fontSize: '0.75rem', width: 110, flexShrink: 0, fontWeight: isAgent ? 700 : 400, color: isAgent ? 'var(--d-accent-light)' : 'var(--d-text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{nomeAgente(r.agent)}</span>
+                          <div style={{ flex: 1, background: 'rgba(58,45,85,0.5)', borderRadius: 4, height: 7 }}>
+                            <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: isAgent ? 'var(--d-accent)' : 'rgba(128,98,222,0.4)' }} />
+                          </div>
+                          <span style={{ fontSize: '0.73rem', fontWeight: isAgent ? 700 : 400, color: isAgent ? 'var(--d-accent-light)' : 'var(--d-text-dim)', width: 28, textAlign: 'right', flexShrink: 0 }}>{r.total}</span>
                         </div>
-                        <span style={{ fontSize: '0.75rem', fontWeight: isAgent ? 700 : 400, color: isAgent ? 'var(--d-accent-light)' : 'var(--d-text-dim)', width: 32, textAlign: 'right', flexShrink: 0 }}>{r.total}</span>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Ranking Efetivas */}
+                <div className="dash-card" style={{ padding: '0.75rem 1rem' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--d-success)', marginBottom: 10 }}>
+                    Ranking — Efetivas
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {rankingEfet.map((r, i) => {
+                      const isAgent = r.agent === agent;
+                      const pct = rankingEfet[0].total > 0 ? (r.total / rankingEfet[0].total) * 100 : 0;
+                      return (
+                        <div key={r.agent} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ width: 20, textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: i < 3 ? '#eab308' : 'var(--d-text-dim)', flexShrink: 0 }}>#{i+1}</span>
+                          <span style={{ fontSize: '0.75rem', width: 110, flexShrink: 0, fontWeight: isAgent ? 700 : 400, color: isAgent ? '#22c55e' : 'var(--d-text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{nomeAgente(r.agent)}</span>
+                          <div style={{ flex: 1, background: 'rgba(58,45,85,0.5)', borderRadius: 4, height: 7 }}>
+                            <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: isAgent ? '#22c55e' : 'rgba(34,197,94,0.3)' }} />
+                          </div>
+                          <span style={{ fontSize: '0.73rem', fontWeight: isAgent ? 700 : 400, color: isAgent ? '#22c55e' : 'var(--d-text-dim)', width: 28, textAlign: 'right', flexShrink: 0 }}>{r.total}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
             </>
