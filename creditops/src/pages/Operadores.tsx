@@ -236,7 +236,7 @@ export default function Operadores() {
         <KPICard label="% Dep. Completo"   value={`${avgPct.toFixed(1)}%`}             icon={<Trophy size={14}/>}    status="warning"/>
         <KPICard label="Atingimento Médio" value={`${avgAting.toFixed(1)}%`}           icon={<TrendingUp size={14}/>} status={avgAting>=100?'success':avgAting>=70?'warning':'danger'}/>
         <KPICard label="Total Localizados" value={formatNumber(totalLoc)}              icon={<Users size={14}/>}     status="neutral"/>
-        {topExec && <KPICard label="Top Executivo" value={topExec.nome.split(' ')[0]!} icon={<Trophy size={14}/>} status="success" subValue={`${formatCurrency(topExec.depositoTotal,true)} · ${topExec.atingimento.toFixed(1)}% ating.`}/>}
+        {/* Top Executivo removido */}
       </div>
 
       {/* Cards por carteira */}

@@ -137,10 +137,10 @@ function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:Ex
           </thead>
           <tbody>
             <tr style={{ background:'rgba(170,108,201,0.06)' }}>
-              <td colSpan={4+groupHeaders[group].length} style={{ padding:'0.3rem 0.75rem', fontWeight:700, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--d-purple-mid)' }}>Equipe Antonio</td>
+              <td colSpan={4+groupHeaders[group].length} style={{ padding:'0.3rem 0.75rem', fontWeight:700, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--d-purple-mid)' }}>Equipe Douglas</td>
             </tr>
             {antonio.map(renderRow)}
-            <TotalRowNew total={t1} label="Total Equipe Antonio"/>
+            <TotalRowNew total={t1} label="Total Equipe Douglas"/>
             <tr style={{ background:'rgba(33,173,224,0.06)' }}>
               <td colSpan={4+groupHeaders[group].length} style={{ padding:'0.3rem 0.75rem', fontWeight:700, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--d-blue)' }}>Equipe Ana</td>
             </tr>
@@ -234,12 +234,11 @@ export default function ResumoExecutivo() {
 
   // Quando sem filtro, usa totais do parser (batem com a planilha)
   // Quando com filtro, recalcula a partir das linhas filtradas
-  const equipe1Total = isFiltered ? calcTotal(antonioRows, 'Total Equipe Antonio') : data!.equipe1Total!;
+  const equipe1Total = isFiltered ? calcTotal(antonioRows, 'Total Equipe Douglas') : data!.equipe1Total!;
   const equipe2Total = isFiltered ? calcTotal(anaRows,     'Total Equipe Ana')     : data!.equipe2Total!;
   const grandTotal   = isFiltered ? calcTotal(executivoRows, 'Total Geral')        : data!.grandTotal!;
 
   const gt = grandTotal!;
-  const debugInfo = `Linhas: ${executivoRows.length} | Assignado: ${gt.assignado.toLocaleString('pt-BR')} | Completo: ${gt.completo.toLocaleString('pt-BR')}`;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
@@ -256,9 +255,6 @@ export default function ResumoExecutivo() {
         <KPICard label="Total Baixas"      value={formatCurrency(gt.montoBaixas,true)}   status="danger"/>
         <KPICard label="% Baixas"          value={`${gt.pctBaixas.toFixed(1)}%`}         status={gt.pctBaixas<=5?'success':gt.pctBaixas<=10?'warning':'danger'}/>
         <KPICard label="Atingimento Médio" value={`${avgAting.toFixed(1)}%`}             status={statusKpi(avgAting)}/>
-      </div>
-      <div style={{ fontSize:'0.68rem', color:'var(--d-text-dim)', padding:'2px 0' }}>
-        🔍 Debug: {debugInfo}
       </div>
       <Tabs defaultValue="tabela">
         <TabsList className="tabs-list-override">
