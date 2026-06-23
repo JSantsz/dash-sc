@@ -26,11 +26,15 @@ export function FunnelOperacional({ totalClientes, localizados, promessas, depos
     { name:'Depósitos',   value: depositos     ?? 537,  fill:'#21ade0' },
     { name:'Promessas',   value: promessas     ?? 663,  fill:'#aa6cc9' },
   ];
+  const base = totalClientes ?? 1;
   return (
     <ChartCard title="Funil Operacional" subtitle="Carteira → Localizados → Depósitos → Promessas">
       <ResponsiveContainer width="100%" height="100%">
         <FunnelChart>
-          <Tooltip contentStyle={TT} formatter={(v) => [(Number(v)).toLocaleString('pt-BR'), 'Clientes']} />
+          <Tooltip contentStyle={TT} formatter={(v, _name, props) => {
+            const pct = base > 0 ? ((Number(v) / base) * 100).toFixed(1) : '0';
+            return [`${Number(v).toLocaleString('pt-BR')} (${pct}%)`, props.payload?.name ?? ''];
+          }} />
           <Funnel dataKey="value" data={data} isAnimationActive>
             {data.map((e, i) => <Cell key={i} fill={e.fill} />)}
             <LabelList position="right" fill="var(--d-text)" stroke="none" dataKey="name" style={{ fontSize:12 }} />

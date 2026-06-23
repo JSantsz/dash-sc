@@ -132,6 +132,7 @@ export default function Overview() {
             <KPICard label="Carteira Total (R$)"    value={formatCurrency(totalValor,true)}     subValue={`${formatNumber(totalClientes)} clientes`}             icon={<DollarSign size={14}/>} status="neutral"/>
             <KPICard label="Localizados (R$)"       value={formatCurrency(localizadosVal,true)}  subValue={`${locPct}% de localização`}                           icon={<MapPin size={14}/>}     status={locStatus as KPIStatus}/>
             <KPICard label="Promessas (R$)"         value={formatCurrency(promessasVal,true)}    subValue={promSubValue}  icon={<FileText size={14}/>}   status="neutral"/>
+            <KPICard label="Total Promessas (R$)"    value={formatCurrency(kpi.promessasTotalDiv,true)} subValue="Todos os status" icon={<FileText size={14}/>} status="neutral"/>
             <KPICard label="Depósitos Completos (R$)" value={formatCurrency(depositosVal,true)} subValue={`${depPct.toFixed(1)}% do assignado`}                  icon={<CheckCircle size={14}/>} status={depStatus as KPIStatus}/>
             <KPICard label="Taxa de Conversão"      value={`${taxaConversao.toFixed(1)}%`}       subValue="Dep. Total / Carteira"                                  icon={<TrendingUp size={14}/>}  status={depStatus as KPIStatus}/>
             <KPICard label="Ticket Médio"           value={formatCurrency(ticketMedio,true)}     subValue="Por depósito completo"                                  icon={<BarChart2 size={14}/>}   status="neutral"/>
@@ -142,6 +143,7 @@ export default function Overview() {
             <KPICard label="Carteira Total (Cli.)"  value={formatNumber(totalClientes)}          subValue={formatCurrency(totalValor,true)}                        icon={<Users size={14}/>}      status="neutral"/>
             <KPICard label="Localizados"            value={formatNumber(localizadosCli)}          subValue={`${locPct}% de localização`}                           icon={<MapPin size={14}/>}     status={locStatus as KPIStatus} meta="80%" realizado={`${locPct}%`} progress={(locPct/80)*100}/>
             <KPICard label="Promessas (Clientes)"   value={formatNumber(promessasCli)}            subValue={promSubValue}  icon={<FileText size={14}/>}   status="neutral"/>
+            <KPICard label="Total Promessas (Cli.)" value={formatNumber(kpi.promessasTotalCli)}   subValue="Todos os status" icon={<FileText size={14}/>} status="neutral"/>
             <KPICard label="Depósitos Completos"    value={formatNumber(depositosCli)}            subValue={`${depPct.toFixed(1)}% de conversão`}                  icon={<CheckCircle size={14}/>} status={depStatus as KPIStatus} meta="25%" realizado={`${depPct.toFixed(1)}%`} progress={(depPct/25)*100}/>
             <KPICard label="Taxa de Conversão"      value={`${taxaConversao.toFixed(1)}%`}        subValue="Dep. Total / Carteira"                                  icon={<TrendingUp size={14}/>}  status={depStatus as KPIStatus}/>
             <KPICard label="Ticket Médio"           value={formatCurrency(ticketMedio,true)}      subValue="Por depósito completo"                                  icon={<BarChart2 size={14}/>}   status="neutral"/>

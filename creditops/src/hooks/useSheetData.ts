@@ -5,7 +5,7 @@ import type { OpTable, OpRow, RowType } from '../utils/mockData';
 export interface SheetKPIs {
   carteiraTotalClientes: number; carteiraTotalValor: number;
   clientesLocalizados: number; clientesLocalizadosPct: number; localizadosDividaTotal: number;
-  promessasVigentes: number; promessasDividaTotal: number;
+  promessasVigentes: number; promessasDividaTotal: number; promessasTotalCli: number; promessasTotalDiv: number;
   depositosCompletos: number;
   depositosCompletosPct: number; valorRecuperado: number;
 }
@@ -169,6 +169,7 @@ export function parseDepositos(rows: string[][]): Partial<SheetData> {
   // Promessas — soma todas as linhas de cada seção (Clientes e Dívida)
   const promBlock   = sliceBetween(primRows, 'Promessas', ['Depósito', 'Carteira Secundária']);
   const PROM_LABELS = ['vigente'];
+  const PROM_ALL    = ['não pagará','sem promessa','vencida','promessa parcial','promessa completa','vigente'];
 
   function sumSection(rows: string[][], headerLabel: string, stopLabel: string): number {
     const hi = findRow(rows, headerLabel);
@@ -182,6 +183,18 @@ export function parseDepositos(rows: string[][]): Partial<SheetData> {
 
   const promCli = sumSection(promBlock, 'Clientes', 'Dívida');
   const promDiv = sumSection(promBlock, 'Dívida', '');
+
+  function sumSectionAll(rows: string[][], headerLabel: string, stopLabel: string): number {
+    const hi = findRow(rows, headerLabel);
+    if (hi < 0) return 0;
+    const stopIdx = findRow(rows, stopLabel, hi + 1);
+    const end = stopIdx > 0 ? stopIdx : rows.length;
+    return rows.slice(hi + 1, end)
+      .filter(r => PROM_ALL.includes((r[0]??'').trim().toLowerCase()))
+      .reduce((s, r) => s + cleanNum(r[1] ?? '0'), 0);
+  }
+  const promCliAll = sumSectionAll(promBlock, 'Clientes', 'Dívida');
+  const promDivAll = sumSectionAll(promBlock, 'Dívida', '');
 
   const totalClientes   = cleanNum(assignRow?.[1]  ?? '0');
   const totalDivida     = cleanNum(dividaRow?.[1]  ?? '0');
@@ -200,6 +213,8 @@ export function parseDepositos(rows: string[][]): Partial<SheetData> {
     localizadosDividaTotal: localizadosDivida,
     promessasVigentes:     promessas,
     promessasDividaTotal:  promessasDivida,
+    promessasTotalCli:     promCliAll,
+    promessasTotalDiv:     promDivAll,
     depositosCompletos:    depositos,
     depositosCompletosPct: depPct,
     valorRecuperado,
