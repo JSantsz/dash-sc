@@ -97,7 +97,7 @@ export default function ResumoBaixas() {
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(175px, 1fr))', gap:10 }}>
             <KPICard label="Total (R$)"           value={formatCurrency(totalD.assignado,true)}              status="neutral"  icon={<DollarSign size={13}/>}/>
             <KPICard label="% Baixas"             value={`${totalD.pctBaixas.toFixed(1)}%`}                  status="warning"  progress={totalD.pctBaixas} meta="10%" realizado={`${totalD.pctBaixas.toFixed(1)}%`}/>
-            <KPICard label="Baixas Solicitadas"   value={formatCurrency(totalD.baixaPrevista,true)}           subValue={`${solPct.toFixed(1)}% do total`}    status="warning" icon={<TrendingDown size={13}/>}/>
+            <KPICard label="Baixas Previstas"   value={formatCurrency(totalD.baixaPrevista,true)}           subValue={`${solPct.toFixed(1)}% do total`}    status="warning" icon={<TrendingDown size={13}/>}/>
             <KPICard label="Baixas 2xC"           value={row2xC ? formatCurrency(row2xC.baixaPrevista,true) : '—'} subValue={`${sol2xCPct.toFixed(1)}% do total`} status="danger"  icon={<TrendingDown size={13}/>}/>
           </div>
         );
