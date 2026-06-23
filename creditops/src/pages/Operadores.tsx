@@ -239,21 +239,12 @@ export default function Operadores() {
         {topExec && <KPICard label="Top Executivo" value={topExec.nome.split(' ')[0]!} icon={<Trophy size={14}/>} status="success" subValue={`${formatCurrency(topExec.depositoTotal,true)} · ${topExec.atingimento.toFixed(1)}% ating.`}/>}
       </div>
 
-      {/* Cards por carteira + Ranking */}
-      <div style={{ display:'grid', gridTemplateColumns:'2fr 1fr', gap:12 }}>
-        <CarteiraTable rawRows={(data?.executivoRows ?? []).filter(r =>
+      {/* Cards por carteira */}
+      <CarteiraTable rawRows={(data?.executivoRows ?? []).filter(r =>
         (filters.operador === 'all' || r.email === filters.operador) &&
         (filters.carteira === 'all' || r.carteira === filters.carteira) &&
         (timeFiltro === 'all' || r.equipe === timeFiltro)
       )} />
-
-        <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-          <div style={{ fontSize:'0.82rem', fontWeight:700, color:'var(--d-text)', marginBottom:4 }}>🏆 Ranking Executivos</div>
-          {executivos.slice(0,6).map((e,i) => (
-            <RankingCard key={e.email} rank={i+1} nome={e.nome} pctCompleto={e.pctCompleto} atingimento={e.atingimento}/>
-          ))}
-        </div>
-      </div>
 
       {/* Gráficos */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
