@@ -168,7 +168,7 @@ export function parseDepositos(rows: string[][]): Partial<SheetData> {
 
   // Promessas — soma todas as linhas de cada seção (Clientes e Dívida)
   const promBlock   = sliceBetween(primRows, 'Promessas', ['Depósito', 'Carteira Secundária']);
-  const PROM_LABELS = ['não pagará','sem promessa','vencida','promessa parcial','promessa completa','vigente'];
+  const PROM_LABELS = ['vigente'];
 
   function sumSection(rows: string[][], headerLabel: string, stopLabel: string): number {
     const hi = findRow(rows, headerLabel);

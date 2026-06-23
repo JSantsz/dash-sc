@@ -86,7 +86,7 @@ export default function Overview() {
   const locPct           = isFiltered ? (totalClientes>0 ? Math.round((localizadosCli/totalClientes)*100) : 0) : kpi.clientesLocalizadosPct;
   const promessasCli     = isFiltered ? filteredRows.reduce((s,r) => s+r.parcial, 0)           : kpi.promessasVigentes;
   const promessasVal     = isFiltered ? filteredRows.reduce((s,r) => s+r.parcial, 0)           : kpi.promessasDividaTotal;
-  const promSubValue     = 'Não pagará + Sem promessa + Vencida + Parcial + Completa + Vigente';
+  const promSubValue     = 'Apenas promessas vigentes';
   const depositosCli     = isFiltered ? filteredRows.reduce((s,r) => s+r.completo, 0)          : kpi.depositosCompletos;
   const depositosVal     = isFiltered ? filteredRows.reduce((s,r) => s+r.depositoTotal, 0)     : kpi.valorRecuperado;
   const depPct           = totalValor>0 ? (depositosVal/totalValor)*100 : kpi.depositosCompletosPct;
