@@ -30,7 +30,7 @@ export default function AtendimentoSC() {
   const [darkMode,   setDarkMode]   = useState(true);
   const [key,        setKey]        = useState(0);
 
-  const iframeUrl = `${BASE_URL}?data_range=${dateRange}&executivo=${encodeURIComponent(executivo)}`;
+  const iframeUrl = BASE_URL;
 
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16, height:'100%' }}>
@@ -47,27 +47,8 @@ export default function AtendimentoSC() {
           </div>
         </div>
 
-        {/* Filtros */}
-        <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
-          {/* Data */}
-          <div style={{ display:'flex', alignItems:'center', gap:8, background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:8, padding:'6px 12px' }}>
-            <span style={{ fontSize:'0.68rem', fontWeight:600, color:'var(--d-text-dim)', textTransform:'uppercase', letterSpacing:'0.05em' }}>Data</span>
-            <select value={dateRange} onChange={e => setDateRange(e.target.value)}
-              style={{ background:'transparent', border:'none', outline:'none', color:'var(--d-text)', fontSize:'0.85rem', fontWeight:700, cursor:'pointer' }}>
-              {DATE_OPTIONS.map(o => <option key={o.value} value={o.value} style={{ background:'#201b36' }}>{o.label}</option>)}
-            </select>
-          </div>
-
-          {/* Executivo */}
-          <div style={{ display:'flex', alignItems:'center', gap:8, background:'var(--d-card)', border:'1px solid var(--d-border)', borderRadius:8, padding:'6px 12px' }}>
-            <span style={{ fontSize:'0.68rem', fontWeight:600, color:'var(--d-text-dim)', textTransform:'uppercase', letterSpacing:'0.05em' }}>Executivo</span>
-            <select value={executivo} onChange={e => setExecutivo(e.target.value)}
-              style={{ background:'transparent', border:'none', outline:'none', color:'var(--d-text)', fontSize:'0.85rem', fontWeight:700, cursor:'pointer' }}>
-              {EXECUTIVO_OPTIONS.map(o => <option key={o} value={o} style={{ background:'#201b36' }}>{o}</option>)}
-            </select>
-          </div>
-
-          {/* Toggle dark mode */}
+        {/* Controles */}
+        <div style={{ display:'flex', alignItems:'center', gap:10 }}>
           <button onClick={() => setDarkMode(d => !d)} style={{
             display:'flex', alignItems:'center', gap:6, padding:'6px 12px', borderRadius:8, cursor:'pointer',
             border:'1px solid var(--d-border)', background: darkMode ? 'var(--d-accent-muted)' : 'var(--d-card)',
@@ -75,8 +56,6 @@ export default function AtendimentoSC() {
           }}>
             {darkMode ? '🌙 Escuro' : '☀️ Claro'}
           </button>
-
-          {/* Atualizar */}
           <button onClick={() => setKey(k => k+1)} style={{
             display:'flex', alignItems:'center', gap:5, background:'var(--d-accent-muted)', border:'1px solid var(--d-accent)',
             color:'var(--d-accent-light)', borderRadius:8, padding:'6px 14px', fontSize:'0.75rem', fontWeight:600, cursor:'pointer',
