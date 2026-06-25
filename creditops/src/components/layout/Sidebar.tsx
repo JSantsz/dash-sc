@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, ChevronDown, ChevronRight, Inbox, Building2, CreditCard, Award, TrendingDown, Phone, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, Users, ChevronDown, ChevronRight, Inbox, Building2, CreditCard, Award, TrendingDown, Phone, BarChart2, MessageSquare } from 'lucide-react';
 interface NavLeaf { label:string; to:string; }
 const RESUMO_SUBGROUPS = [
   { label:'Carteira Primária',   icon:<CreditCard size={13}/>, children:[{label:'Localizados',to:'/resumo/primaria/localizados'},{label:'Promessas',to:'/resumo/primaria/promessas'},{label:'Depósitos',to:'/resumo/primaria/depositos'}] },
@@ -55,6 +55,7 @@ export function Sidebar() {
         <div className="dash-divider" style={{ margin:'0.5rem 0.25rem' }}/>
         <NavLink to="/ligacoes" className={({isActive:a})=>`nav-item top-level${a?' active':''}`}><Phone size={15}/>Ligações</NavLink>
         <NavLink to="/produtividade" className={({isActive:a})=>`nav-item top-level${a?' active':''}`}><BarChart2 size={15}/>Produtividade</NavLink>
+        <NavLink to="/atendimento-sc" className={({isActive:a})=>`nav-item top-level${a?' active':''}`}><MessageSquare size={15}/>Dash Olimpo</NavLink>
       </div>
       <div style={{ borderTop:'1px solid var(--d-border)', padding:'0.75rem 1rem', fontSize:'0.65rem', color:'var(--d-text-dim)', textAlign:'center' }}>v1.0 · Serviço ao Cliente</div>
     </nav>
