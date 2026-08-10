@@ -162,7 +162,7 @@ export default function UtilizacaoAppPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
               <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false}/>
               <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={190}/>
-              <Tooltip contentStyle={TT} formatter={(v:unknown) => {
+              <Tooltip contentStyle={TT} labelStyle={{ color:'#e8e4f0', fontWeight:700 }} itemStyle={{ color:'#c8bff3' }} formatter={(v:unknown) => {
                 const value = Number(v);
                 const pct = filtradas.length > 0 ? ((value / filtradas.length) * 100).toFixed(1) : '0';
                 return [`${value.toLocaleString('pt-BR')} (${pct}%)`, 'Clientes'];
@@ -181,7 +181,7 @@ export default function UtilizacaoAppPage() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
               <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown) => `${v}%`}/>
               <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={190}/>
-              <Tooltip contentStyle={TT} formatter={(v:unknown, _name, props) => {
+              <Tooltip contentStyle={TT} labelStyle={{ color:'#e8e4f0', fontWeight:700 }} itemStyle={{ color:'#c8bff3' }} formatter={(v:unknown, _name, props) => {
                 const comDeposito = (props?.payload as { comDeposito?: number })?.comDeposito ?? 0;
                 const total = (props?.payload as { total?: number })?.total ?? 0;
                 return [`${Number(v).toFixed(1)}% (${comDeposito} de ${total})`, 'Com depósito'];
