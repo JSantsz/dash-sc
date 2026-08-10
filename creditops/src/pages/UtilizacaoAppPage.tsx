@@ -26,6 +26,29 @@ const SEGMENTO_COR: Record<string, string> = {
   'Ativo no app (últimos 30 dias)':            '#8062de', // Jacarta
 };
 
+// Converte a string vinda da planilha (timestamp do BigQuery) pra Date. Retorna
+// null se vier vazio ou num formato que o JS não reconheça.
+function parseDataSafe(value: string): Date | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Considera "depósito recente" quando cai dentro dos últimos 30 dias — mesma
+// janela usada no resto da página (login/cliques/dias ativos).
+function depositoRecente(value: string): boolean {
+  const d = parseDataSafe(value);
+  if (!d) return false;
+  const limite = new Date();
+  limite.setDate(limite.getDate() - 30);
+  return d >= limite;
+}
+
+function formatUltimoDeposito(value: string): string {
+  const d = parseDataSafe(value);
+  return d ? d.toLocaleDateString('pt-BR') : '—';
+}
+
 const columns: ColumnDef<UtilizacaoAppRow>[] = [
   { header: 'BR',                     accessorKey: 'br' },
   { header: 'Nome',                   accessorKey: 'nome' },
@@ -37,6 +60,7 @@ const columns: ColumnDef<UtilizacaoAppRow>[] = [
   { header: 'Última Atividade',       accessorKey: 'ultimaAtividadeApp' },
   { header: 'Funcionalidade + Usada', accessorKey: 'funcionalidadeMaisUsada' },
   { header: 'Segmento',               accessorKey: 'segmentoEngajamento' },
+  { header: 'Último Depósito',        accessorKey: 'ultimoDeposito', cell: info => formatUltimoDeposito(info.getValue() as string) },
 ];
 
 export default function UtilizacaoAppPage() {
@@ -82,6 +106,23 @@ export default function UtilizacaoAppPage() {
     [filtradas]
   );
 
+  // % de clientes com depósito nos últimos 30 dias, por segmento de engajamento —
+  // usa a nova coluna "Último Depósito" vinda do BigQuery (campo last_deposit_date
+  // de credit_repairs).
+  const depositoData = useMemo(
+    () => SEGMENTOS_ORDEM.map(segmento => {
+      const doSegmento = filtradas.filter(r => r.segmentoEngajamento === segmento);
+      const comDeposito = doSegmento.filter(r => depositoRecente(r.ultimoDeposito)).length;
+      return {
+        name: segmento,
+        pct: doSegmento.length > 0 ? (comDeposito / doSegmento.length) * 100 : 0,
+        comDeposito,
+        total: doSegmento.length,
+      };
+    }),
+    [filtradas]
+  );
+
   if (loading) return <div className="dash-loading"><RefreshCw size={20} style={{ animation:'spin 1s linear infinite', color:'var(--d-accent)' }}/>&nbsp;Carregando...<style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style></div>;
   if (error) return (
     <div className="dash-loading" style={{ flexDirection:'column', gap:8, color:'var(--d-danger)' }}>
@@ -114,20 +155,45 @@ export default function UtilizacaoAppPage() {
         <KPICard label="Dias Ativos Médios (30d)" value={kpis.diasAtivosMedia.toFixed(1)} status="neutral"/>
       </div>
 
-      <ChartCard title="Funil de Engajamento" subtitle="Distribuição dos clientes por nível de uso do app" height={260}>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={funilData} layout="vertical" margin={{ top:0, right:60, left:0, bottom:0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
-            <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false}/>
-            <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={190}/>
-            <Tooltip contentStyle={TT} formatter={(v:unknown) => [Number(v).toLocaleString('pt-BR'), 'Clientes']}/>
-            <Bar dataKey="value" radius={[0,3,3,0]}>
-              {funilData.map((e, i) => <Cell key={i} fill={SEGMENTO_COR[e.name] ?? '#8062de'} />)}
-              <LabelList dataKey="value" position="right" fill="#c8bff3" style={{ fontSize:10 }}/>
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartCard>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+        <ChartCard title="Funil de Engajamento" subtitle="Distribuição dos clientes por nível de uso do app" height={260}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={funilData} layout="vertical" margin={{ top:0, right:60, left:0, bottom:0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
+              <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false}/>
+              <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={190}/>
+              <Tooltip contentStyle={TT} formatter={(v:unknown) => {
+                const value = Number(v);
+                const pct = filtradas.length > 0 ? ((value / filtradas.length) * 100).toFixed(1) : '0';
+                return [`${value.toLocaleString('pt-BR')} (${pct}%)`, 'Clientes'];
+              }}/>
+              <Bar dataKey="value" radius={[0,3,3,0]}>
+                {funilData.map((e, i) => <Cell key={i} fill={SEGMENTO_COR[e.name] ?? '#8062de'} />)}
+                <LabelList dataKey="value" position="right" fill="#c8bff3" style={{ fontSize:10 }}/>
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard title="% com Depósito por Segmento" subtitle="Clientes com depósito nos últimos 30 dias, por nível de uso do app" height={260}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={depositoData} layout="vertical" margin={{ top:0, right:60, left:0, bottom:0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
+              <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown) => `${v}%`}/>
+              <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={190}/>
+              <Tooltip contentStyle={TT} formatter={(v:unknown, _name, props) => {
+                const comDeposito = (props?.payload as { comDeposito?: number })?.comDeposito ?? 0;
+                const total = (props?.payload as { total?: number })?.total ?? 0;
+                return [`${Number(v).toFixed(1)}% (${comDeposito} de ${total})`, 'Com depósito'];
+              }}/>
+              <Bar dataKey="pct" radius={[0,3,3,0]}>
+                {depositoData.map((e, i) => <Cell key={i} fill={SEGMENTO_COR[e.name] ?? '#8062de'} />)}
+                <LabelList dataKey="pct" position="right" fill="#c8bff3" style={{ fontSize:10 }} formatter={(v:unknown) => `${Number(v).toFixed(1)}%`}/>
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
 
       <div style={{ fontSize:'0.85rem', fontWeight:700, color:'var(--d-text)', borderBottom:'1px solid var(--d-border)', paddingBottom:8 }}>Detalhamento por Cliente</div>
       <DataTable columns={columns} data={filtradas} exportFilename="utilizacao-app" />

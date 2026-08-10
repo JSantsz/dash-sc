@@ -55,6 +55,7 @@ export interface UtilizacaoAppRow {
   ultimaAtividadeApp:      string;
   funcionalidadeMaisUsada: string;
   segmentoEngajamento:     string; // "Ativo no app (últimos 30 dias)" etc.
+  ultimoDeposito:          string; // data/hora do último depósito do cliente (pode vir vazio)
 }
 
 export interface SheetData {
@@ -423,7 +424,7 @@ export function parseUtilizacaoApp(rows: string[][]): UtilizacaoAppRow[] {
   // Cabeçalho: BR | Nome | Executivo | Carteira Primária | Carteira Secundária |
   // Status Utilização | Celular | Tem Login | Login Últimos 30d | Cliques Últimos 30d |
   // Dias Ativos Últimos 30d | Sessões Últimos 30d | Última Atividade App |
-  // Funcionalidade Mais Usada | Segmento Engajamento
+  // Funcionalidade Mais Usada | Segmento Engajamento | Último Depósito
   return rows.slice(1)
     .filter(r => r[0] && r[0].trim())
     .map(r => ({
@@ -442,6 +443,7 @@ export function parseUtilizacaoApp(rows: string[][]): UtilizacaoAppRow[] {
       ultimaAtividadeApp:       (r[12] ?? '').trim(),
       funcionalidadeMaisUsada:  (r[13] ?? '').trim(),
       segmentoEngajamento:      (r[14] ?? '').trim(),
+      ultimoDeposito:           (r[15] ?? '').trim(),
     }));
 }
 
