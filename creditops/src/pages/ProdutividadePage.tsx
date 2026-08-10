@@ -206,7 +206,7 @@ export default function ProdutividadePage() {
                       <XAxis dataKey="name" tick={{ fill:'#c4bedd', fontSize:9 }} tickLine={false} axisLine={false} angle={-25} textAnchor="end" height={50}/>
                       <YAxis tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                       <Tooltip contentStyle={TT} formatter={(v:unknown,n:unknown)=>[formatCurrency(Number(v),true),String(n)]}/>
-                      <Legend wrapperStyle={{ fontSize:11, color:'#9991b8' }}/>
+                      <Legend wrapperStyle={{ fontSize:11, color:'#c8bff3' }}/>
                       <Bar dataKey="completo" name="Completo" fill="#5ecada" radius={[2,2,0,0]}/>
                       <Bar dataKey="parcial"  name="Parcial"  fill="#aa6cc9" radius={[2,2,0,0]}/>
                     </BarChart>

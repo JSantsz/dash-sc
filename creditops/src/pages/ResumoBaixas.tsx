@@ -84,7 +84,7 @@ export default function ResumoBaixas() {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-        <div style={{ background:'rgba(239,68,68,0.12)', borderRadius:8, padding:'7px', display:'flex', alignItems:'center', color:'var(--d-danger)' }}><TrendingDown size={18}/></div>
+        <div style={{ background:'rgba(170,108,201,0.12)', borderRadius:8, padding:'7px', display:'flex', alignItems:'center', color:'var(--d-danger)' }}><TrendingDown size={18}/></div>
         <div><h1 className="page-title">Resumo Baixas</h1><p className="page-subtitle">Esteira: Assignado → Solicitação → Confirmado → Retido → Baixa Prevista</p></div>
       </div>
 
@@ -181,12 +181,12 @@ export default function ResumoBaixas() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={semTotal.map(r=>({ name:r.label, value:r.solicitados }))} layout="vertical" margin={{ top:0, right:60, left:0, bottom:0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
-                  <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
+                  <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false}/>
                   <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
                   <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatNumber(Number(v)),'Solicitados']}/>
                   <Bar dataKey="value" fill="#8062de" radius={[0,3,3,0]}>
                     {semTotal.map((_:unknown,i:number)=><Cell key={i} fill="#8062de" opacity={1-i*0.05}/>)}
-                    <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }}/>
+                    <LabelList dataKey="value" position="right" fill="#c8bff3" style={{ fontSize:10 }}/>
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -206,8 +206,8 @@ export default function ResumoBaixas() {
                   margin={{ top:4, right:12, left:-10, bottom:40 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false}/>
-                  <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:9 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-35} textAnchor="end" height={50}/>
-                  <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
+                  <XAxis dataKey="name" tick={{ fill:'#c8bff3', fontSize:9 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-35} textAnchor="end" height={50}/>
+                  <YAxis tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false}/>
                   <Tooltip contentStyle={TT}/>
                   <Bar dataKey="primaria"   name="Primária"   fill="#8062de" radius={[2,2,0,0]}/>
                   <Bar dataKey="secundaria" name="Secundária" fill="#5ecada" radius={[2,2,0,0]}/>
@@ -219,12 +219,12 @@ export default function ResumoBaixas() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={pctBaixasChart} layout="vertical" margin={{ top:0, right:50, left:0, bottom:0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
-                  <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>`${Number(v)}%`}/>
+                  <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>`${Number(v)}%`}/>
                   <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
                   <Tooltip contentStyle={TT} formatter={(v:unknown)=>[`${Number(v).toFixed(1)}%`,"% Baixas"]}/>
                   <Bar dataKey="value" radius={[0,3,3,0]}>
                     {pctBaixasChart.map((e:{value:number},i:number)=><Cell key={i} fill={e.value>=7?"#aa6cc9":e.value>=5?"#aa97ef":"#5ecada"}/>)}
-                    <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>`${Number(v).toFixed(1)}%`}/>
+                    <LabelList dataKey="value" position="right" fill="#c8bff3" style={{ fontSize:10 }} formatter={(v:unknown)=>`${Number(v).toFixed(1)}%`}/>
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -234,12 +234,12 @@ export default function ResumoBaixas() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={baixasPrimDivida.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC").map((r:BaixasRow)=>({ name:r.label, value:r.baixaPrevista }))} layout="vertical" margin={{ top:0, right:80, left:0, bottom:0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
-                  <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>`${(Number(v)/1e6).toFixed(1)}M`}/>
+                  <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>`${(Number(v)/1e6).toFixed(1)}M`}/>
                   <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
                   <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatCurrency(Number(v),true),"Baixa Prevista"]}/>
                   <Bar dataKey="value" fill="#aa6cc9" radius={[0,3,3,0]}>
                     {baixasPrimDivida.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC").map((_:unknown,i:number)=><Cell key={i} fill="#aa6cc9" opacity={1-i*0.05}/>)}
-                    <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
+                    <LabelList dataKey="value" position="right" fill="#c8bff3" style={{ fontSize:10 }} formatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -252,12 +252,12 @@ export default function ResumoBaixas() {
                   layout="vertical" margin={{ top:0, right:80, left:0, bottom:0 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
-                  <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
+                  <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                   <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
                   <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatCurrency(Number(v),true),"Dívida / Baixa"]}/>
                   <Bar dataKey="value" fill="#5ecada" radius={[0,3,3,0]}>
                     {baixasPrimDivida.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC"&&r.confirmado>0).map((_:unknown,i:number)=><Cell key={i} fill="#5ecada" opacity={1-i*0.05}/>)}
-                    <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
+                    <LabelList dataKey="value" position="right" fill="#c8bff3" style={{ fontSize:10 }} formatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
@@ -279,12 +279,12 @@ export default function ResumoBaixas() {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} layout="vertical" margin={{ top:0, right:70, left:0, bottom:0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
-                    <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>fmt(Number(v))}/>
+                    <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>fmt(Number(v))}/>
                     <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={90}/>
                     <Tooltip contentStyle={TT} formatter={(v:unknown)=>[fmt(Number(v)),'']}/>
                     <Bar dataKey="value" fill={color} radius={[0,3,3,0]}>
                       {chartData.map((_,i)=><Cell key={i} fill={color} opacity={1-i*0.06}/>)}
-                      <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>fmt(Number(v))}/>
+                      <LabelList dataKey="value" position="right" fill="#c8bff3" style={{ fontSize:10 }} formatter={(v:unknown)=>fmt(Number(v))}/>
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>

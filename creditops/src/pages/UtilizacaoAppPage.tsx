@@ -118,12 +118,12 @@ export default function UtilizacaoAppPage() {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={funilData} layout="vertical" margin={{ top:0, right:60, left:0, bottom:0 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" horizontal={false}/>
-            <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
+            <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false}/>
             <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={190}/>
             <Tooltip contentStyle={TT} formatter={(v:unknown) => [Number(v).toLocaleString('pt-BR'), 'Clientes']}/>
             <Bar dataKey="value" radius={[0,3,3,0]}>
               {funilData.map((e, i) => <Cell key={i} fill={SEGMENTO_COR[e.name] ?? '#8062de'} />)}
-              <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }}/>
+              <LabelList dataKey="value" position="right" fill="#c8bff3" style={{ fontSize:10 }}/>
             </Bar>
           </BarChart>
         </ResponsiveContainer>
