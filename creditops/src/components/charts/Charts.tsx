@@ -23,7 +23,7 @@ export function FunnelOperacional({ totalClientes, localizados, promessas, depos
   const data = [
     { name:'Carteira',    value: totalClientes ?? 2684, fill:'#8062de' },
     { name:'Localizados', value: localizados   ?? 2010, fill:'#aa97ef' },
-    { name:'Depósitos',   value: depositos     ?? 537,  fill:'#21ade0' },
+    { name:'Depósitos',   value: depositos     ?? 537,  fill:'#5ecada' },
     { name:'Promessas',   value: promessas     ?? 663,  fill:'#aa6cc9' },
   ];
   const base = totalClientes ?? 1;
@@ -57,8 +57,8 @@ export function EvolucaoDiaria() {
           <Tooltip contentStyle={TT} />
           <Legend wrapperStyle={{ fontSize:11, color:'#9991b8', paddingTop:8 }} />
           <Line type="monotone" dataKey="localizados" name="Localizados" stroke="#8062de" strokeWidth={2} dot={false} />
-          <Line type="monotone" dataKey="promessas"   name="Promessas"   stroke="#21ade0" strokeWidth={2} dot={false} />
-          <Line type="monotone" dataKey="depositos"   name="Depósitos"   stroke="#22c55e" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="promessas"   name="Promessas"   stroke="#5ecada" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="depositos"   name="Depósitos"   stroke="#aa6cc9" strokeWidth={2} dot={false} />
         </LineChart>
       </ResponsiveContainer>
     </ChartCard>
@@ -93,7 +93,7 @@ export function RankingFornecedores() {
           <YAxis type="category" dataKey="fornecedor" tick={{ fill:'#9991b8', fontSize:11 }} tickLine={false} axisLine={false} width={90} />
           <Tooltip contentStyle={TT} formatter={(v) => [formatCurrency(Number(v),true), 'Recuperado']} />
           <Bar dataKey="valor" name="Valor" radius={[0,3,3,0]}>
-            {supplierRanking.map((_,i) => <Cell key={i} fill={(['#21ade0','#17789c','#aa6cc9','#8062de'] as string[])[i]??'#8062de'} />)}
+            {supplierRanking.map((_,i) => <Cell key={i} fill={(['#5ecada','#aa97ef','#aa6cc9','#8062de'] as string[])[i]??'#8062de'} />)}
           </Bar>
         </BarChart>
       </ResponsiveContainer>

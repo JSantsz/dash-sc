@@ -210,7 +210,7 @@ export default function ResumoBaixas() {
                   <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
                   <Tooltip contentStyle={TT}/>
                   <Bar dataKey="primaria"   name="Primária"   fill="#8062de" radius={[2,2,0,0]}/>
-                  <Bar dataKey="secundaria" name="Secundária" fill="#21ade0" radius={[2,2,0,0]}/>
+                  <Bar dataKey="secundaria" name="Secundária" fill="#5ecada" radius={[2,2,0,0]}/>
                 </BarChart>
               </ResponsiveContainer>
             </ChartCard>
@@ -223,7 +223,7 @@ export default function ResumoBaixas() {
                   <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
                   <Tooltip contentStyle={TT} formatter={(v:unknown)=>[`${Number(v).toFixed(1)}%`,"% Baixas"]}/>
                   <Bar dataKey="value" radius={[0,3,3,0]}>
-                    {pctBaixasChart.map((e:{value:number},i:number)=><Cell key={i} fill={e.value>=7?"#ef4444":e.value>=5?"#eab308":"#22c55e"}/>)}
+                    {pctBaixasChart.map((e:{value:number},i:number)=><Cell key={i} fill={e.value>=7?"#aa6cc9":e.value>=5?"#aa97ef":"#5ecada"}/>)}
                     <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>`${Number(v).toFixed(1)}%`}/>
                   </Bar>
                 </BarChart>
@@ -255,8 +255,8 @@ export default function ResumoBaixas() {
                   <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                   <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={85}/>
                   <Tooltip contentStyle={TT} formatter={(v:unknown)=>[formatCurrency(Number(v),true),"Dívida / Baixa"]}/>
-                  <Bar dataKey="value" fill="#21ade0" radius={[0,3,3,0]}>
-                    {baixasPrimDivida.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC"&&r.confirmado>0).map((_:unknown,i:number)=><Cell key={i} fill="#21ade0" opacity={1-i*0.05}/>)}
+                  <Bar dataKey="value" fill="#5ecada" radius={[0,3,3,0]}>
+                    {baixasPrimDivida.filter((r:BaixasRow)=>!r.isTotal&&r.label!=="2xC"&&r.confirmado>0).map((_:unknown,i:number)=><Cell key={i} fill="#5ecada" opacity={1-i*0.05}/>)}
                     <LabelList dataKey="value" position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                   </Bar>
                 </BarChart>
@@ -270,10 +270,10 @@ export default function ResumoBaixas() {
         <TabsContent value="ranking" style={{ marginTop:12 }}>
           <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
             {[
-              { title:'Maior % Baixas',         data:rankMaiorPct,    color:'#ef4444', fmt:(v:number)=>`${v.toFixed(1)}%` },
-              { title:'Menor % Retenção',        data:rankMenorRetenc, color:'#eab308', fmt:(v:number)=>`${v.toFixed(1)}%` },
+              { title:'Maior % Baixas',         data:rankMaiorPct,    color:'#aa6cc9', fmt:(v:number)=>`${v.toFixed(1)}%` },
+              { title:'Menor % Retenção',        data:rankMenorRetenc, color:'#aa97ef', fmt:(v:number)=>`${v.toFixed(1)}%` },
               { title:'Maior Valor Confirmado',  data:rankMaiorConf,   color:'#8062de', fmt:(v:number)=>formatCurrency(v,true) },
-              { title:'Maior Baixa Prevista',    data:rankMaiorBaixa,  color:'#22c55e', fmt:(v:number)=>formatCurrency(v,true) },
+              { title:'Maior Baixa Prevista',    data:rankMaiorBaixa,  color:'#5ecada', fmt:(v:number)=>formatCurrency(v,true) },
             ].map(({ title, data: chartData, color, fmt }) => (
               <ChartCard key={title} title={title} height={Math.max(200, chartData.length * 32)}>
                 <ResponsiveContainer width="100%" height="100%">

@@ -106,7 +106,7 @@ export default function ProdutividadePage() {
   const funnelData = [
     { name: 'Assignado',  value: totais?.assignado    ?? 0, fill: '#8062de' },
     { name: 'Localizados',value: (totais?.wpp ?? 0) + (totais?.wppMeetTel ?? 0), fill: '#aa97ef' },
-    { name: 'Depósitos',  value: totais?.completo     ?? 0, fill: '#21ade0' },
+    { name: 'Depósitos',  value: totais?.completo     ?? 0, fill: '#5ecada' },
     { name: 'Promessas',  value: totais?.parcial      ?? 0, fill: '#aa6cc9' },
   ];
 
@@ -207,8 +207,8 @@ export default function ProdutividadePage() {
                       <YAxis tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                       <Tooltip contentStyle={TT} formatter={(v:unknown,n:unknown)=>[formatCurrency(Number(v),true),String(n)]}/>
                       <Legend wrapperStyle={{ fontSize:11, color:'#9991b8' }}/>
-                      <Bar dataKey="completo" name="Completo" fill="#22c55e" radius={[2,2,0,0]}/>
-                      <Bar dataKey="parcial"  name="Parcial"  fill="#eab308" radius={[2,2,0,0]}/>
+                      <Bar dataKey="completo" name="Completo" fill="#5ecada" radius={[2,2,0,0]}/>
+                      <Bar dataKey="parcial"  name="Parcial"  fill="#aa6cc9" radius={[2,2,0,0]}/>
                     </BarChart>
                   </ResponsiveContainer>
                 )}

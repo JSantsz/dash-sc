@@ -19,8 +19,8 @@ type ColGroup = 'deposito' | 'pct' | 'localizacao' | 'baixas';
 const COL_GROUPS: { key: ColGroup; label: string; color: string }[] = [
   { key: 'deposito',    label: 'Depósito',    color: '#aa6cc9' },
   { key: 'pct',         label: '% Depósito',  color: '#8062de' },
-  { key: 'localizacao', label: 'Localização', color: '#21ade0' },
-  { key: 'baixas',      label: 'Baixas',      color: '#ef4444' },
+  { key: 'localizacao', label: 'Localização', color: '#5ecada' },
+  { key: 'baixas',      label: 'Baixas',      color: '#aa6cc9' },
 ];
 
 function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:ExecTotal; grand:ExecTotal }) {
@@ -270,8 +270,8 @@ export default function ResumoExecutivo() {
             {([
               { title:'Maior Depósito Total', key:'deposito' as const, color:'#8062de', fmt:(v:number)=>formatCurrency(v,true) },
               { title:'Maior % Completo',     key:'pct'      as const, color:'#aa97ef', fmt:(v:number)=>`${v.toFixed(1)}%` },
-              { title:'Maior Atingimento',    key:'ating'    as const, color:'#21ade0', fmt:(v:number)=>`${v.toFixed(1)}%` },
-              { title:'Maior Localização',    key:'loc'      as const, color:'#17789c', fmt:(v:number)=>formatNumber(v) },
+              { title:'Maior Atingimento',    key:'ating'    as const, color:'#5ecada', fmt:(v:number)=>`${v.toFixed(1)}%` },
+              { title:'Maior Localização',    key:'loc'      as const, color:'#aa97ef', fmt:(v:number)=>formatNumber(v) },
             ] as const).map(({ title, key, color, fmt }) => {
               const sorted = [...agg].sort((a,b)=>b[key]-a[key]);
               return (

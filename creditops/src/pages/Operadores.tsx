@@ -270,7 +270,7 @@ export default function Operadores() {
               <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
               <Tooltip content={<CustomTooltip/>}/>
               <Bar dataKey="value" name="Localizados" radius={[3,3,0,0]}>
-                {locData.map((_,i)=><Cell key={i} fill='#17789c' opacity={1-i*0.07}/>)}
+                {locData.map((_,i)=><Cell key={i} fill='#5ecada' opacity={1-i*0.07}/>)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
