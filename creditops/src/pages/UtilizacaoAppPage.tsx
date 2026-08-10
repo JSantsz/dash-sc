@@ -17,11 +17,13 @@ const SEGMENTOS_ORDEM = [
   'Ativo no app (últimos 30 dias)',
 ];
 
+// Paleta Bravo homologada (sem semânticas de verde/vermelho) — progressão
+// Light-Pur → Amethyst → Viking → Jacarta, do menor pro maior engajamento.
 const SEGMENTO_COR: Record<string, string> = {
-  'Nunca acessou o app':                       '#ef4444',
-  'Tem login, mas nunca usou o app':           '#eab308',
-  'Já usou o app, mas não nos últimos 30 dias':'#21ade0',
-  'Ativo no app (últimos 30 dias)':            '#22c55e',
+  'Nunca acessou o app':                       '#aa97ef', // Light-Pur
+  'Tem login, mas nunca usou o app':           '#aa6cc9', // Amethyst
+  'Já usou o app, mas não nos últimos 30 dias':'#5ecada', // Viking
+  'Ativo no app (últimos 30 dias)':            '#8062de', // Jacarta
 };
 
 const columns: ColumnDef<UtilizacaoAppRow>[] = [
