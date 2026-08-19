@@ -87,6 +87,15 @@ export default function UtilizacaoAppPage() {
     const total = filtradas.length;
     const ativos30d = filtradas.filter(r => r.segmentoEngajamento === 'Ativo no app (últimos 30 dias)').length;
     const nuncaAcessou = filtradas.filter(r => r.segmentoEngajamento === 'Nunca acessou o app').length;
+    const comLogin = filtradas.filter(r => r.temLogin === 'Sí').length;
+    // Taxa de Utilização do App = clientes que já abriram o app pelo menos uma vez
+    // (ativos nos últimos 30d + já usaram antes disso), sobre a carteira total —
+    // mostra a usabilidade real do app, diferente do "Ativos no App (30d)" que só
+    // olha uso recente.
+    const jaUsouAlgumaVez = filtradas.filter(r =>
+      r.segmentoEngajamento === 'Ativo no app (últimos 30 dias)' ||
+      r.segmentoEngajamento === 'Já usou o app, mas não nos últimos 30 dias'
+    ).length;
     const diasAtivosMedia = total > 0
       ? filtradas.reduce((acc, r) => acc + r.diasAtivosUltimos30d, 0) / total
       : 0;
@@ -94,6 +103,8 @@ export default function UtilizacaoAppPage() {
       total,
       pctAtivos30d: total > 0 ? (ativos30d / total) * 100 : 0,
       pctNuncaAcessou: total > 0 ? (nuncaAcessou / total) * 100 : 0,
+      pctComLogin: total > 0 ? (comLogin / total) * 100 : 0,
+      pctUtilizacao: total > 0 ? (jaUsouAlgumaVez / total) * 100 : 0,
       diasAtivosMedia,
     };
   }, [filtradas]);
@@ -123,6 +134,23 @@ export default function UtilizacaoAppPage() {
     [filtradas]
   );
 
+  // Ranking de funcionalidades mais usadas — conta, entre os clientes filtrados,
+  // quantos têm cada funcionalidade como a mais usada no app (campo já vem
+  // calculado do BigQuery via APPROX_TOP_COUNT por cliente). % é sobre o total de
+  // clientes com alguma funcionalidade registrada (ou seja, que já usaram o app).
+  const funcionalidadesRanking = useMemo(() => {
+    const counts = new Map<string, number>();
+    filtradas.forEach(r => {
+      const f = (r.funcionalidadeMaisUsada || '').trim();
+      if (!f) return;
+      counts.set(f, (counts.get(f) ?? 0) + 1);
+    });
+    const totalComFuncionalidade = Array.from(counts.values()).reduce((a, b) => a + b, 0);
+    return Array.from(counts.entries())
+      .map(([nome, qtd]) => ({ nome, qtd, pct: totalComFuncionalidade > 0 ? (qtd / totalComFuncionalidade) * 100 : 0 }))
+      .sort((a, b) => b.qtd - a.qtd);
+  }, [filtradas]);
+
   if (loading) return <div className="dash-loading"><RefreshCw size={20} style={{ animation:'spin 1s linear infinite', color:'var(--d-accent)' }}/>&nbsp;Carregando...<style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}`}</style></div>;
   if (error) return (
     <div className="dash-loading" style={{ flexDirection:'column', gap:8, color:'var(--d-danger)' }}>
@@ -150,6 +178,8 @@ export default function UtilizacaoAppPage() {
 
       <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill, minmax(175px, 1fr))', gap:10 }}>
         <KPICard label="Clientes na Carteira" value={kpis.total.toLocaleString('pt-BR')} status="neutral" icon={<Users size={13}/>}/>
+        <KPICard label="Taxa de Utilização do App" value={`${kpis.pctUtilizacao.toFixed(1)}%`} status="success" icon={<Smartphone size={13}/>}/>
+        <KPICard label="Com Login Habilitado" value={`${kpis.pctComLogin.toFixed(1)}%`} status="neutral" icon={<LogIn size={13}/>}/>
         <KPICard label="Ativos no App (30d)" value={`${kpis.pctAtivos30d.toFixed(1)}%`} status="success" icon={<Activity size={13}/>}/>
         <KPICard label="Nunca Acessaram o App" value={`${kpis.pctNuncaAcessou.toFixed(1)}%`} status="danger" icon={<LogIn size={13}/>}/>
         <KPICard label="Dias Ativos Médios (30d)" value={kpis.diasAtivosMedia.toFixed(1)} status="neutral"/>
@@ -193,6 +223,42 @@ export default function UtilizacaoAppPage() {
             </BarChart>
           </ResponsiveContainer>
         </ChartCard>
+      </div>
+
+      <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+        <div style={{ fontSize:'0.85rem', fontWeight:700, color:'var(--d-text)', borderBottom:'1px solid var(--d-border)', paddingBottom:8 }}>Funcionalidades Mais Usadas</div>
+        <div className="dash-card" style={{ padding:0, overflow:'hidden' }}>
+          {funcionalidadesRanking.length === 0 ? (
+            <div style={{ padding:'1.5rem', textAlign:'center', color:'var(--d-text-dim)', fontSize:'0.82rem' }}>
+              Nenhum cliente com uso do app registrado para este filtro.
+            </div>
+          ) : (
+            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <thead>
+                <tr style={{ background:'rgba(0,0,0,0.2)' }}>
+                  <th style={{ padding:'8px 14px', textAlign:'left', fontSize:'0.7rem', fontWeight:700, color:'var(--d-text-dim)', textTransform:'uppercase', letterSpacing:'0.05em', borderBottom:'1px solid var(--d-border)', whiteSpace:'nowrap' }}>Funcionalidade</th>
+                  <th style={{ padding:'8px 14px', borderBottom:'1px solid var(--d-border)', width:'40%' }}/>
+                  <th style={{ padding:'8px 14px', textAlign:'right', fontSize:'0.7rem', fontWeight:700, color:'var(--d-text-dim)', textTransform:'uppercase', letterSpacing:'0.05em', borderBottom:'1px solid var(--d-border)', whiteSpace:'nowrap' }}>Clientes</th>
+                  <th style={{ padding:'8px 14px', textAlign:'right', fontSize:'0.7rem', fontWeight:700, color:'var(--d-text-dim)', textTransform:'uppercase', letterSpacing:'0.05em', borderBottom:'1px solid var(--d-border)', whiteSpace:'nowrap' }}>%</th>
+                </tr>
+              </thead>
+              <tbody>
+                {funcionalidadesRanking.map((f, i) => (
+                  <tr key={f.nome} style={{ background: i % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.12)' }}>
+                    <td style={{ padding:'7px 14px', fontSize:'0.8rem', fontWeight:600, color:'var(--d-text)', borderBottom:'1px solid rgba(58,45,85,0.3)', whiteSpace:'nowrap' }}>{f.nome}</td>
+                    <td style={{ padding:'7px 14px', borderBottom:'1px solid rgba(58,45,85,0.3)' }}>
+                      <div style={{ background:'rgba(58,45,85,0.5)', borderRadius:4, height:7 }}>
+                        <div style={{ width:`${f.pct}%`, height:'100%', borderRadius:4, background:'var(--d-accent)' }}/>
+                      </div>
+                    </td>
+                    <td style={{ padding:'7px 14px', textAlign:'right', fontSize:'0.8rem', fontWeight:700, color:'var(--d-accent-light)', borderBottom:'1px solid rgba(58,45,85,0.3)' }}>{f.qtd.toLocaleString('pt-BR')}</td>
+                    <td style={{ padding:'7px 14px', textAlign:'right', fontSize:'0.78rem', color:'var(--d-text-dim)', borderBottom:'1px solid rgba(58,45,85,0.3)' }}>{f.pct.toFixed(1)}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       <div style={{ fontSize:'0.85rem', fontWeight:700, color:'var(--d-text)', borderBottom:'1px solid var(--d-border)', paddingBottom:8 }}>Detalhamento por Cliente</div>
