@@ -133,7 +133,7 @@ function ProdutividadeModal({
                 <KPIStat label="Ligações Efetivas" value={String(totalEfet)} color="var(--d-success)" />
                 <KPIStat label="Taxa Conversão" value={`${txConv.toFixed(1)}%`} color={txConv >= 50 ? 'var(--d-success)' : txConv >= 30 ? 'var(--d-warning)' : 'var(--d-danger)'} />
                 <KPIStat label="Hora de Pico" value={horaPico} sub={`${horaPicoVal} tentativas`} color="var(--d-blue)" />
-                <KPIStat label="Ranking" value={`#${posicao}`} sub={`de ${agentes.length} agentes`} color={posicao <= 3 ? '#eab308' : 'var(--d-text)'} />
+                <KPIStat label="Ranking" value={`#${posicao}`} sub={`de ${agentes.length} agentes`} color={posicao <= 3 ? '#5ecada' : 'var(--d-text)'} />
               </div>
 
               {/* Gráfico evolução por hora */}
@@ -144,14 +144,14 @@ function ProdutividadeModal({
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={horaData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false} />
-                    <XAxis dataKey="hora" tick={{ fill: '#9991b8', fontSize: 10 }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fill: '#9991b8', fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="hora" tick={{ fill: '#c8bff3', fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fill: '#c8bff3', fontSize: 10 }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={TT} />
-                    <Legend wrapperStyle={{ fontSize: 11, color: '#9991b8' }} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: '#c8bff3' }} />
                     <Bar dataKey="tentativas" name="Tentativas" fill="#8062de" radius={[2,2,0,0]}>
                       {horaData.map((d, i) => <Cell key={i} fill={d.tentativas === horaPicoVal && horaPicoVal > 0 ? '#aa6cc9' : '#8062de'} />)}
                     </Bar>
-                    <Bar dataKey="efetivas" name="Efetivas" fill="#22c55e" radius={[2,2,0,0]} />
+                    <Bar dataKey="efetivas" name="Efetivas" fill="#5ecada" radius={[2,2,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -180,10 +180,10 @@ function ProdutividadeModal({
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={mediaEquipe} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false} />
-                    <XAxis dataKey="hora" tick={{ fill: '#9991b8', fontSize: 10 }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fill: '#9991b8', fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="hora" tick={{ fill: '#c8bff3', fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fill: '#c8bff3', fontSize: 10 }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={TT} />
-                    <Legend wrapperStyle={{ fontSize: 11, color: '#9991b8' }} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: '#c8bff3' }} />
                     <Bar dataKey="agente" name={nomeAgente(agent)} fill="#8062de" radius={[2,2,0,0]} />
                     <Bar dataKey="media"  name="Média Equipe"       fill="#3a2d55" radius={[2,2,0,0]} />
                   </BarChart>
@@ -198,12 +198,12 @@ function ProdutividadeModal({
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={mediaEquipe} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.5)" vertical={false} />
-                    <XAxis dataKey="hora" tick={{ fill: '#9991b8', fontSize: 10 }} tickLine={false} axisLine={false} />
-                    <YAxis tick={{ fill: '#9991b8', fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <XAxis dataKey="hora" tick={{ fill: '#c8bff3', fontSize: 10 }} tickLine={false} axisLine={false} />
+                    <YAxis tick={{ fill: '#c8bff3', fontSize: 10 }} tickLine={false} axisLine={false} />
                     <Tooltip contentStyle={TT} />
-                    <Legend wrapperStyle={{ fontSize: 11, color: '#9991b8' }} />
-                    <Bar dataKey="agenteEfet" name={nomeAgente(agent)} fill="#22c55e" radius={[2,2,0,0]} />
-                    <Bar dataKey="mediaEfet"  name="Média Equipe"      fill="#166534" radius={[2,2,0,0]} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: '#c8bff3' }} />
+                    <Bar dataKey="agenteEfet" name={nomeAgente(agent)} fill="#5ecada" radius={[2,2,0,0]} />
+                    <Bar dataKey="mediaEfet"  name="Média Equipe"      fill="#453d84" radius={[2,2,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -221,7 +221,7 @@ function ProdutividadeModal({
                       const pct = ranking[0].total > 0 ? (r.total / ranking[0].total) * 100 : 0;
                       return (
                         <div key={r.agent} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 20, textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: i < 3 ? '#eab308' : 'var(--d-text-dim)', flexShrink: 0 }}>#{i+1}</span>
+                          <span style={{ width: 20, textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: i < 3 ? '#5ecada' : 'var(--d-text-dim)', flexShrink: 0 }}>#{i+1}</span>
                           <span style={{ fontSize: '0.75rem', width: 110, flexShrink: 0, fontWeight: isAgent ? 700 : 400, color: isAgent ? 'var(--d-accent-light)' : 'var(--d-text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{nomeAgente(r.agent)}</span>
                           <div style={{ flex: 1, background: 'rgba(58,45,85,0.5)', borderRadius: 4, height: 7 }}>
                             <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: isAgent ? 'var(--d-accent)' : 'rgba(128,98,222,0.4)' }} />
@@ -244,12 +244,12 @@ function ProdutividadeModal({
                       const pct = rankingEfet[0].total > 0 ? (r.total / rankingEfet[0].total) * 100 : 0;
                       return (
                         <div key={r.agent} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ width: 20, textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: i < 3 ? '#eab308' : 'var(--d-text-dim)', flexShrink: 0 }}>#{i+1}</span>
-                          <span style={{ fontSize: '0.75rem', width: 110, flexShrink: 0, fontWeight: isAgent ? 700 : 400, color: isAgent ? '#22c55e' : 'var(--d-text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{nomeAgente(r.agent)}</span>
+                          <span style={{ width: 20, textAlign: 'right', fontSize: '0.7rem', fontWeight: 700, color: i < 3 ? '#5ecada' : 'var(--d-text-dim)', flexShrink: 0 }}>#{i+1}</span>
+                          <span style={{ fontSize: '0.75rem', width: 110, flexShrink: 0, fontWeight: isAgent ? 700 : 400, color: isAgent ? '#5ecada' : 'var(--d-text)', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{nomeAgente(r.agent)}</span>
                           <div style={{ flex: 1, background: 'rgba(58,45,85,0.5)', borderRadius: 4, height: 7 }}>
-                            <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: isAgent ? '#22c55e' : 'rgba(34,197,94,0.3)' }} />
+                            <div style={{ width: `${pct}%`, height: '100%', borderRadius: 4, background: isAgent ? '#5ecada' : 'rgba(94,202,218,0.3)' }} />
                           </div>
-                          <span style={{ fontSize: '0.73rem', fontWeight: isAgent ? 700 : 400, color: isAgent ? '#22c55e' : 'var(--d-text-dim)', width: 28, textAlign: 'right', flexShrink: 0 }}>{r.total}</span>
+                          <span style={{ fontSize: '0.73rem', fontWeight: isAgent ? 700 : 400, color: isAgent ? '#5ecada' : 'var(--d-text-dim)', width: 28, textAlign: 'right', flexShrink: 0 }}>{r.total}</span>
                         </div>
                       );
                     })}

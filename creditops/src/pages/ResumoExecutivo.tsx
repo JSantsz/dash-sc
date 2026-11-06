@@ -19,8 +19,8 @@ type ColGroup = 'deposito' | 'pct' | 'localizacao' | 'baixas';
 const COL_GROUPS: { key: ColGroup; label: string; color: string }[] = [
   { key: 'deposito',    label: 'Depósito',    color: '#aa6cc9' },
   { key: 'pct',         label: '% Depósito',  color: '#8062de' },
-  { key: 'localizacao', label: 'Localização', color: '#21ade0' },
-  { key: 'baixas',      label: 'Baixas',      color: '#ef4444' },
+  { key: 'localizacao', label: 'Localização', color: '#5ecada' },
+  { key: 'baixas',      label: 'Baixas',      color: '#aa6cc9' },
 ];
 
 function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:ExecTotal; grand:ExecTotal }) {
@@ -141,7 +141,7 @@ function ExecTable({ rows, t1, t2, grand }:{ rows:ExecRow[]; t1:ExecTotal; t2:Ex
             </tr>
             {antonio.map(renderRow)}
             <TotalRowNew total={t1} label="Total Equipe Douglas"/>
-            <tr style={{ background:'rgba(33,173,224,0.06)' }}>
+            <tr style={{ background:'rgba(94,202,218,0.06)' }}>
               <td colSpan={4+groupHeaders[group].length} style={{ padding:'0.3rem 0.75rem', fontWeight:700, fontSize:'0.68rem', textTransform:'uppercase', letterSpacing:'0.07em', color:'var(--d-blue)' }}>Equipe Ana</td>
             </tr>
             {ana.map(renderRow)}
@@ -270,8 +270,8 @@ export default function ResumoExecutivo() {
             {([
               { title:'Maior Depósito Total', key:'deposito' as const, color:'#8062de', fmt:(v:number)=>formatCurrency(v,true) },
               { title:'Maior % Completo',     key:'pct'      as const, color:'#aa97ef', fmt:(v:number)=>`${v.toFixed(1)}%` },
-              { title:'Maior Atingimento',    key:'ating'    as const, color:'#21ade0', fmt:(v:number)=>`${v.toFixed(1)}%` },
-              { title:'Maior Localização',    key:'loc'      as const, color:'#17789c', fmt:(v:number)=>formatNumber(v) },
+              { title:'Maior Atingimento',    key:'ating'    as const, color:'#5ecada', fmt:(v:number)=>`${v.toFixed(1)}%` },
+              { title:'Maior Localização',    key:'loc'      as const, color:'#aa97ef', fmt:(v:number)=>formatNumber(v) },
             ] as const).map(({ title, key, color, fmt }) => {
               const sorted = [...agg].sort((a,b)=>b[key]-a[key]);
               return (
@@ -279,12 +279,12 @@ export default function ResumoExecutivo() {
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={sorted} layout="vertical" margin={{ top:0, right:60, left:0, bottom:0 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.6)" horizontal={false}/>
-                      <XAxis type="number" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>fmt(Number(v))}/>
+                      <XAxis type="number" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>fmt(Number(v))}/>
                       <YAxis type="category" dataKey="name" tick={{ fill:'#e8e4f0', fontSize:10 }} tickLine={false} axisLine={false} width={100}/>
                       <Tooltip contentStyle={TT} formatter={(v:unknown)=>[fmt(Number(v)),'']}/>
                       <Bar dataKey={key} fill={color} radius={[0,3,3,0]}>
                         {sorted.map((_,i)=><Cell key={i} fill={color} opacity={1-i*0.07}/>)}
-                        <LabelList dataKey={key} position="right" fill="#9991b8" style={{ fontSize:10 }} formatter={(v:unknown)=>fmt(Number(v))}/>
+                        <LabelList dataKey={key} position="right" fill="#c8bff3" style={{ fontSize:10 }} formatter={(v:unknown)=>fmt(Number(v))}/>
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>

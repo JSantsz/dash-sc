@@ -40,12 +40,15 @@ export default function ProdutividadePage() {
   const execRows = useMemo(() => data?.executivoRows ?? [], [data]);
   const ligacoes = useMemo(() => data?.ligacoes ?? [], [data]);
 
-  // Operadores únicos
+  // Operadores únicos — une quem tem carteira atribuída (execRows) com quem aparece
+  // na aba Ligações mas não tem carteira própria (ex: Dayane, Luana, Tamires),
+  // senão esses operadores nunca apareciam neste seletor.
   const operadores = useMemo(() => {
     const map = new Map<string, string>();
     execRows.forEach(r => map.set(r.email, shortName(r.email)));
+    ligacoes.forEach(r => { if (!map.has(r.agent)) map.set(r.agent, shortName(r.agent)); });
     return Array.from(map.entries()).sort((a, b) => a[1].localeCompare(b[1]));
-  }, [execRows]);
+  }, [execRows, ligacoes]);
 
   const emailFiltro = selectedEmail || operadores[0]?.[0] || '';
   const nomeOp = shortName(emailFiltro);
@@ -106,7 +109,7 @@ export default function ProdutividadePage() {
   const funnelData = [
     { name: 'Assignado',  value: totais?.assignado    ?? 0, fill: '#8062de' },
     { name: 'Localizados',value: (totais?.wpp ?? 0) + (totais?.wppMeetTel ?? 0), fill: '#aa97ef' },
-    { name: 'Depósitos',  value: totais?.completo     ?? 0, fill: '#21ade0' },
+    { name: 'Depósitos',  value: totais?.completo     ?? 0, fill: '#5ecada' },
     { name: 'Promessas',  value: totais?.parcial      ?? 0, fill: '#aa6cc9' },
   ];
 
@@ -158,7 +161,7 @@ export default function ProdutividadePage() {
         </div>
       </div>
 
-      {totais && (
+      {totais ? (
         <>
           {/* ── KPIs principais ── */}
           <div>
@@ -206,9 +209,9 @@ export default function ProdutividadePage() {
                       <XAxis dataKey="name" tick={{ fill:'#c4bedd', fontSize:9 }} tickLine={false} axisLine={false} angle={-25} textAnchor="end" height={50}/>
                       <YAxis tick={{ fill:'#c4bedd', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
                       <Tooltip contentStyle={TT} formatter={(v:unknown,n:unknown)=>[formatCurrency(Number(v),true),String(n)]}/>
-                      <Legend wrapperStyle={{ fontSize:11, color:'#9991b8' }}/>
-                      <Bar dataKey="completo" name="Completo" fill="#22c55e" radius={[2,2,0,0]}/>
-                      <Bar dataKey="parcial"  name="Parcial"  fill="#eab308" radius={[2,2,0,0]}/>
+                      <Legend wrapperStyle={{ fontSize:11, color:'#c8bff3' }}/>
+                      <Bar dataKey="completo" name="Completo" fill="#5ecada" radius={[2,2,0,0]}/>
+                      <Bar dataKey="parcial"  name="Parcial"  fill="#aa6cc9" radius={[2,2,0,0]}/>
                     </BarChart>
                   </ResponsiveContainer>
                 )}
@@ -247,12 +250,18 @@ export default function ProdutividadePage() {
               </table>
             </div>
           </div>
+        </>
+      ) : (
+        <div className="dash-card" style={{ padding:'1.5rem', textAlign:'center', color:'var(--d-text-dim)', fontSize:'0.82rem' }}>
+          {nomeOp} não tem carteira de clientes atribuída — mostrando apenas dados de ligação abaixo.
+        </div>
+      )}
 
-          {/* ── Ligações ── */}
-          <div>
-            <SectionTitle>Produtividade — Ligações</SectionTitle>
+      {/* ── Ligações (independente de ter carteira atribuída) ── */}
+      <div>
+        <SectionTitle>Produtividade — Ligações</SectionTitle>
 
-            {datasLig.length === 0 ? (
+        {datasLig.length === 0 ? (
               <div className="dash-card" style={{ padding:'1.5rem', textAlign:'center', color:'var(--d-text-dim)', fontSize:'0.82rem', marginTop:8 }}>
                 Nenhum dado de ligação encontrado para {nomeOp}.
               </div>
@@ -349,9 +358,7 @@ export default function ProdutividadePage() {
                 })}
               </>
             )}
-          </div>
-        </>
-      )}
+      </div>
     </div>
   );
 }
