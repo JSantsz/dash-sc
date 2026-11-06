@@ -37,7 +37,7 @@ function shortName(email: string) {
 function RankingCard({ rank, nome, pctCompleto, atingimento }: {
   rank: number; nome: string; pctCompleto: number; atingimento: number;
 }) {
-  const medal = rank===1?'#5ecada':rank===2?'#aa97ef':rank===3?'#aa6cc9':'var(--d-accent)';
+  const medal = rank===1?'#eab308':rank===2?'#9991b8':rank===3?'#cd7c2f':'var(--d-accent)';
   const atColor = atingimento>=100?'var(--d-success)':atingimento>=70?'var(--d-warning)':'var(--d-danger)';
   return (
     <div className="dash-card" style={{ padding:'0.75rem 1rem', display:'flex', alignItems:'center', gap:12, borderLeft:`3px solid ${medal}` }}>
@@ -92,7 +92,7 @@ function CarteiraTable({ rawRows }: { rawRows: NonNullable<ReturnType<typeof use
           const totalLoc  = r.wpp + r.wppMeetTel;
           const atColor   = r.atingimento >= 100 ? 'var(--d-success)' : r.atingimento >= 70 ? 'var(--d-warning)' : 'var(--d-danger)';
           const equipeColor = r.equipe === 'Antonio' ? 'var(--d-purple-mid)' : 'var(--d-blue)';
-          const equipeBg    = r.equipe === 'Antonio' ? 'rgba(170,108,201,0.15)' : 'rgba(94,202,218,0.15)';
+          const equipeBg    = r.equipe === 'Antonio' ? 'rgba(170,108,201,0.15)' : 'rgba(33,173,224,0.15)';
 
           return (
             <div key={i} style={{
@@ -252,8 +252,8 @@ export default function Operadores() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={barData} margin={{ top:4, right:12, left:-10, bottom:40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.6)" vertical={false}/>
-              <XAxis dataKey="name" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-30} textAnchor="end" height={50}/>
-              <YAxis tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
+              <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-30} textAnchor="end" height={50}/>
+              <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false} tickFormatter={(v:unknown)=>formatCurrency(Number(v),true)}/>
               <Tooltip content={<CustomTooltip/>}/>
               <Bar dataKey="deposito" name="Dep. Total" radius={[3,3,0,0]}>
                 {barData.map((_,i)=><Cell key={i} fill={i===0?'#aa97ef':'#8062de'} opacity={1-i*0.07}/>)}
@@ -266,11 +266,11 @@ export default function Operadores() {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={locData} margin={{ top:4, right:12, left:-10, bottom:40 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(58,45,85,0.6)" vertical={false}/>
-              <XAxis dataKey="name" tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-30} textAnchor="end" height={50}/>
-              <YAxis tick={{ fill:'#c8bff3', fontSize:10 }} tickLine={false} axisLine={false}/>
+              <XAxis dataKey="name" tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={{ stroke:'#3a2d55' }} angle={-30} textAnchor="end" height={50}/>
+              <YAxis tick={{ fill:'#9991b8', fontSize:10 }} tickLine={false} axisLine={false}/>
               <Tooltip content={<CustomTooltip/>}/>
               <Bar dataKey="value" name="Localizados" radius={[3,3,0,0]}>
-                {locData.map((_,i)=><Cell key={i} fill='#5ecada' opacity={1-i*0.07}/>)}
+                {locData.map((_,i)=><Cell key={i} fill='#17789c' opacity={1-i*0.07}/>)}
               </Bar>
             </BarChart>
           </ResponsiveContainer>

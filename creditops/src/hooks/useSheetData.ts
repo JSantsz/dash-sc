@@ -39,25 +39,6 @@ export interface LigacaoRow {
   efetivas:   number;
 }
 
-export interface UtilizacaoAppRow {
-  br:                      string; // "BR0000197"
-  nome:                    string;
-  executivo:               string; // email
-  carteiraPrimaria:        string;
-  carteiraSecundaria:      string;
-  statusUtilizacao:        string; // status vindo do BigQuery (ex: "active")
-  celular:                 string;
-  temLogin:                string; // "Sí" / "No"
-  loginUltimos30d:         string; // "Sí" / "No"
-  cliquesUltimos30d:       number;
-  diasAtivosUltimos30d:    number;
-  sessoesUltimos30d:       number;
-  ultimaAtividadeApp:      string;
-  funcionalidadeMaisUsada: string;
-  segmentoEngajamento:     string; // "Ativo no app (últimos 30 dias)" etc.
-  ultimoDeposito:          string; // data/hora do último depósito do cliente (pode vir vazio)
-}
-
 export interface SheetData {
   kpis: SheetKPIs;
   primaryLocalizados: OpTable[]; primaryPromessas: OpTable[]; primaryDepositos: OpTable[];
@@ -66,7 +47,6 @@ export interface SheetData {
   baixasPrimClientes: BaixasRow[]; baixasPrimDivida: BaixasRow[];
   baixasSecClientes: BaixasRow[]; baixasSecDivida: BaixasRow[];
   ligacoes: LigacaoRow[];
-  utilizacaoApp: UtilizacaoAppRow[];
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -342,11 +322,32 @@ export function parseExecutivo(rows: string[][]): Partial<SheetData> {
       montoBaixas:m, pctBaixas:a>0?(m/a)*100:0 };
   }
 
-  const equipe1Total = team1TotalRow ? rowToTotal(team1TotalRow, 'Antonio') : sumTeam(team1, 'Antonio');
-  const equipe2Total = team2TotalRow ? rowToTotal(team2TotalRow, 'Ana')     : sumTeam(team2, 'Ana');
+  // Validação: o total lido da planilha só vale se for coerente com a soma das linhas.
+  // Se o layout da planilha mudar e o parser pegar a linha errada, cai para a soma.
+  const plausivel = (lido: ExecTotal | null, soma: ExecTotal): ExecTotal | null => {
+    if (!lido || soma.assignado <= 0) return lido;
+    const ratio = lido.assignado / soma.assignado;
+    const coerente = ratio >= 0.5 && ratio <= 1.05 && lido.completo <= lido.assignado * 1.001;
+    return coerente ? lido : null;
+  };
 
-  // Grand total: usa linha "Total" da planilha se encontrada, senão soma equipes
-  const grandTotalFromRow = grandTotalRow ? rowToTotal(grandTotalRow, 'Total Geral') : null;
+  const soma1 = sumTeam(team1, 'Antonio');
+  const soma2 = sumTeam(team2, 'Ana');
+  const equipe1Total = plausivel(team1TotalRow ? rowToTotal(team1TotalRow, 'Antonio') : null, soma1) ?? soma1;
+  const equipe2Total = plausivel(team2TotalRow ? rowToTotal(team2TotalRow, 'Ana')     : null, soma2) ?? soma2;
+
+  // Grand total: usa linha "Total" da planilha se for coerente com as equipes, senão soma equipes
+  const somaGeral: ExecTotal = {
+    nome:'Total Geral',
+    assignado:    equipe1Total.assignado    + equipe2Total.assignado,
+    completo:     equipe1Total.completo     + equipe2Total.completo,
+    parcial:      equipe1Total.parcial      + equipe2Total.parcial,
+    depositoTotal:equipe1Total.depositoTotal+ equipe2Total.depositoTotal,
+    pctCompleto:0, wpp:equipe1Total.wpp+equipe2Total.wpp,
+    wppMeetTel:equipe1Total.wppMeetTel+equipe2Total.wppMeetTel,
+    pctContato:0, montoBaixas:equipe1Total.montoBaixas+equipe2Total.montoBaixas, pctBaixas:0,
+  };
+  const grandTotalFromRow = plausivel(grandTotalRow ? rowToTotal(grandTotalRow, 'Total Geral') : null, somaGeral);
   const gt: ExecTotal = grandTotalFromRow ?? {
     nome:'Total Geral',
     assignado:    equipe1Total.assignado    + equipe2Total.assignado,
@@ -417,36 +418,6 @@ export function parseLigacoes(rows: string[][]): LigacaoRow[] {
     }));
 }
 
-// ── Parser Resumo Utilização App ──────────────────────────────────────────────
-
-export function parseUtilizacaoApp(rows: string[][]): UtilizacaoAppRow[] {
-  if (rows.length < 2) return [];
-  // Cabeçalho: BR | Nome | Executivo | Carteira Primária | Carteira Secundária |
-  // Status Utilização | Celular | Tem Login | Login Últimos 30d | Cliques Últimos 30d |
-  // Dias Ativos Últimos 30d | Sessões Últimos 30d | Última Atividade App |
-  // Funcionalidade Mais Usada | Segmento Engajamento | Último Depósito
-  return rows.slice(1)
-    .filter(r => r[0] && r[0].trim())
-    .map(r => ({
-      br:                       (r[0]  ?? '').trim(),
-      nome:                     (r[1]  ?? '').trim(),
-      executivo:                (r[2]  ?? '').trim(),
-      carteiraPrimaria:         (r[3]  ?? '').trim(),
-      carteiraSecundaria:       (r[4]  ?? '').trim(),
-      statusUtilizacao:         (r[5]  ?? '').trim(),
-      celular:                  (r[6]  ?? '').trim(),
-      temLogin:                 (r[7]  ?? '').trim(),
-      loginUltimos30d:          (r[8]  ?? '').trim(),
-      cliquesUltimos30d:        Number(r[9])  || 0,
-      diasAtivosUltimos30d:     Number(r[10]) || 0,
-      sessoesUltimos30d:        Number(r[11]) || 0,
-      ultimaAtividadeApp:       (r[12] ?? '').trim(),
-      funcionalidadeMaisUsada:  (r[13] ?? '').trim(),
-      segmentoEngajamento:      (r[14] ?? '').trim(),
-      ultimoDeposito:           (r[15] ?? '').trim(),
-    }));
-}
-
 // ── Hook principal ────────────────────────────────────────────────────────────
 
 // ── Module-level shared cache ─────────────────────────────────────────────────
@@ -468,19 +439,17 @@ async function loadData() {
   _loading = true; _error = null; notifyAll();
   _fetchPromise = (async () => {
     try {
-      const [depRows, execRows, baixasRows, ligacoesRows, utilizacaoAppRows] = await Promise.all([
+      const [depRows, execRows, baixasRows, ligacoesRows] = await Promise.all([
         fetchSheet(SHEET_URLS.resumoDepositos),
         fetchSheet(SHEET_URLS.resumoExecutivo),
         fetchSheet(SHEET_URLS.resumoBaixas),
         fetchSheet(SHEET_URLS.resumoLigacoes),
-        fetchSheet(SHEET_URLS.resumoUtilizacaoApp),
       ]);
-      const dep           = parseDepositos(depRows);
-      const exec          = parseExecutivo(execRows);
-      const baixas        = parseBaixas(baixasRows);
-      const ligacoes      = parseLigacoes(ligacoesRows);
-      const utilizacaoApp = parseUtilizacaoApp(utilizacaoAppRows);
-      _data = { ...dep, ...exec, ...baixas, ligacoes, utilizacaoApp } as SheetData;
+      const dep      = parseDepositos(depRows);
+      const exec     = parseExecutivo(execRows);
+      const baixas   = parseBaixas(baixasRows);
+      const ligacoes = parseLigacoes(ligacoesRows);
+      _data = { ...dep, ...exec, ...baixas, ligacoes } as SheetData;
       _lastUpdated = new Date();
     } catch (e) {
       _error = e instanceof Error ? e.message : 'Erro ao carregar dados';

@@ -5,11 +5,10 @@ function sheetUrl(gid: string): string {
 }
 
 export const SHEET_URLS = {
-  resumoDepositos:      sheetUrl('0'),
-  resumoExecutivo:      sheetUrl('342317287'),
-  resumoBaixas:         sheetUrl('765687724'),
-  resumoLigacoes:       sheetUrl('798854187'),
-  resumoUtilizacaoApp:  sheetUrl('1777192835'),
+  resumoDepositos: sheetUrl('0'),
+  resumoExecutivo: sheetUrl('342317287'),
+  resumoBaixas:    sheetUrl('765687724'),
+  resumoLigacoes:  sheetUrl('798854187'),
 };
 
 export function parseCSV(text: string): string[][] {

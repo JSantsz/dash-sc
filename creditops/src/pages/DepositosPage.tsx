@@ -42,7 +42,7 @@ export default function DepositosPage() {
   return (
     <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-        <div style={{ background:'rgba(94,202,218,0.15)', borderRadius:8, padding:'7px', display:'flex', alignItems:'center', color:'#5ecada' }}><Inbox size={18}/></div>
+        <div style={{ background:'rgba(33,173,224,0.15)', borderRadius:8, padding:'7px', display:'flex', alignItems:'center', color:'#21ade0' }}><Inbox size={18}/></div>
         <div><h1 className="page-title">Depósitos — {carteiraLabel}</h1><p className="page-subtitle">Visão operacional de depósitos por segmento</p></div>
       </div>
 

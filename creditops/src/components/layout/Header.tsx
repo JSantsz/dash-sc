@@ -45,18 +45,10 @@ export function Header() {
       .map(c => ({ label: c, value: c })),
   ];
 
-  // Operadores reais dos dados — une o roster de Executivos (aba Resumo Executivo/
-  // Carteira) com os agentes que aparecem na aba Ligações. Alguns operadores fazem
-  // ligação mas não têm carteira própria atribuída (ex: Dayane, Luana, Tamires) e
-  // por isso não entravam no roster de Executivos, mesmo tendo registros reais de
-  // ligação na tabela da página /ligacoes.
-  const operadorMap = new Map<string, string>();
-  (data?.executivoRows ?? []).forEach(r => operadorMap.set(r.email, shortName(r.email)));
-  (data?.ligacoes ?? []).forEach(r => { if (!operadorMap.has(r.agent)) operadorMap.set(r.agent, shortName(r.agent)); });
-
+  // Operadores reais dos dados
   const operadorOptions = [
     { label: 'Todos', value: 'all' },
-    ...Array.from(operadorMap.entries())
+    ...Array.from(new Map((data?.executivoRows ?? []).map(r => [r.email, shortName(r.email)])).entries())
       .sort((a, b) => a[1].localeCompare(b[1]))
       .map(([email, nome]) => ({ label: nome, value: email })),
   ];

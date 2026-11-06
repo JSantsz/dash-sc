@@ -161,7 +161,7 @@ export const funnelData = [
   { name:'Carteira', value:2684, fill:'#8062de' },
   { name:'Localizados', value:2010, fill:'#aa97ef' },
   { name:'Promessas', value:663, fill:'#aa6cc9' },
-  { name:'Depósitos', value:537, fill:'#5ecada' },
+  { name:'Depósitos', value:537, fill:'#21ade0' },
 ];
 
 function genDailyData() {
